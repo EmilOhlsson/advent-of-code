@@ -1,4 +1,6 @@
-enum Turn {
+use std::collections::HashSet;
+
+pub enum Turn {
     Left(isize),
     Right(isize),
 }
@@ -10,14 +12,15 @@ enum Heading {
     East,
 }
 
-struct Path {
+pub struct Path {
     x: isize,
     y: isize,
     heading: Heading,
+    visited: HashSet<(isize, isize)>,
 }
 
 impl Path {
-    fn walk(&mut self, turn: Turn) {
+    pub fn walk(&mut self, turn: Turn) -> bool {
         self.heading = match turn {
             Turn::Left(steps) => {
                 match self.heading {
@@ -60,18 +63,20 @@ impl Path {
                     }
                 }
             }
-        }
+        };
+        false
     }
 
-    fn taxi_distance(&self) -> usize {
+    pub fn taxi_distance(&self) -> usize {
         (self.x.abs() + self.y.abs()) as usize
     }
 
-    fn new() -> Path {
+    pub fn new() -> Path {
         Path {
             x: 0,
             y: 0,
-            heading: Heading::North
+            heading: Heading::North,
+            visited: HashSet::new(),
         }
     }
 }
