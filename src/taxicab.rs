@@ -20,51 +20,46 @@ pub struct Path {
 }
 
 impl Path {
-    pub fn walk(&mut self, turn: Turn) -> bool {
+    pub fn walk(&mut self, turn: Turn) {
+        let mut steps: isize;
         self.heading = match turn {
-            Turn::Left(steps) => {
+            Turn::Left(s) => {
+                steps = s;
                 match self.heading {
-                    Heading::North => {
-                        self.x -= steps;
-                        Heading::West
-                    },
-                    Heading::West => {
-                        self.y -= steps;
-                        Heading::South
-                    }
-                    Heading::South => {
-                        self.x += steps;
-                        Heading::East
-                    }
-                    Heading::East => {
-                        self.y += steps;
-                        Heading::North
-                    }
+                    Heading::North => Heading::West,
+                    Heading::West => Heading::South,
+                    Heading::South => Heading::East,
+                    Heading::East => Heading::North,
                 }
             },
 
-            Turn::Right(steps) => {
+            Turn::Right(s) => {
+                steps = s;
                 match self.heading {
-                    Heading::North => {
-                        self.x += steps;
-                        Heading::East
-                    },
-                    Heading::East => {
-                        self.y -= steps;
-                        Heading::South
-                    }
-                    Heading::South => {
-                        self.x -= steps;
-                        Heading::West
-                    }
-                    Heading::West => {
-                        self.y += steps;
-                        Heading::North
-                    }
+                    Heading::North => Heading::East,
+                    Heading::East => Heading::South,
+                    Heading::South => Heading::West,
+                    Heading::West => Heading::North,
                 }
             }
         };
-        false
+
+        let dir = match self.heading {
+            Heading::North => (0, 1),
+            Heading::East => (1, 0),
+            Heading::South => (0, -1),
+            Heading::West => (-1, 0),
+        };
+
+        for _ in 0..steps {
+            let new_coord = (self.x + dir.0, self.y + dir.1);
+            if self.visited.contains(&new_coord) {
+                println!("{:?}", new_coord);
+            }
+            self.x = new_coord.0;
+            self.y = new_coord.1;
+            self.visited.insert(new_coord);
+        }
     }
 
     pub fn taxi_distance(&self) -> usize {
@@ -72,12 +67,14 @@ impl Path {
     }
 
     pub fn new() -> Path {
-        Path {
+        let mut path = Path {
             x: 0,
             y: 0,
             heading: Heading::North,
             visited: HashSet::new(),
-        }
+        };
+        path.visited.insert((0,0));
+        path
     }
 }
 
