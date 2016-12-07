@@ -3,7 +3,12 @@ use std::io::{BufReader,BufRead};
 use std::collections::HashMap;
 
 fn main() {
-    let mut word: [HashMap<char, usize>; 3] = [
+    let mut word: [HashMap<char, usize>; 8] = [
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
         HashMap::new(),
         HashMap::new(),
         HashMap::new(),
