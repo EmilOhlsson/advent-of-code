@@ -1,0 +1,6 @@
+[package]
+name = "ipv7"
+version = "0.1.0"
+authors = ["Emil Ohlsson <kotte@kottland.net>"]
+
+[dependencies]
