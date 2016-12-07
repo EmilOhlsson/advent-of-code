@@ -26,7 +26,7 @@ fn main() {
     for ch_map in word.iter() {
         let mut ch_freq: Vec<(&char, &usize)> = ch_map.iter().collect();
         ch_freq.sort_by(|a, b| b.1.cmp(a.1));
-        print!("{}", ch_freq[0].0);
+        print!("{}", ch_freq[ch_freq.len() - 1].0);
     }
     println!("");
 }
