@@ -1,5 +1,6 @@
 use std::io::{BufRead, BufReader};
 use std::fs::File;
+use std::fmt;
 
 enum LedInstruction {
     Rect { width: usize, height: usize },
@@ -8,20 +9,95 @@ enum LedInstruction {
 }
 
 struct TinyLed {
+    leds: [[bool; 6]; 50],
 }
 
 impl TinyLed {
     fn new() -> TinyLed {
-        TinyLed {}
+        TinyLed { leds: [[false; 6]; 50] }
+    }
+
+    fn fmt(&self) {
+        for r in 0..6 {
+            for c in 0..50 {
+                if self.leds[c][r] {
+                    print!("#");
+                } else {
+                    print!(" ");
+                }
+            }
+            println!("");
+        }
+    }
+
+    fn shiftcol(&mut self, col: usize) {
+        let mut prev_val: bool = self.leds[col][5];
+        let mut prev_val_tmp: bool;
+        for i in 0..6 {
+            prev_val_tmp = self.leds[col][i];
+            self.leds[col][i] = prev_val;
+            prev_val = prev_val_tmp;
+        }
+    }
+
+    fn shiftrow(&mut self, row: usize) {
+        let mut prev_val: bool = self.leds[49][row];
+        let mut prev_val_tmp: bool;
+        for i in 0..50 {
+            prev_val_tmp = self.leds[i][row];
+            self.leds[i][row] = prev_val;
+            prev_val = prev_val_tmp;
+        }
     }
 
     fn mutate(&mut self, instruction: LedInstruction) {
-        unimplemented!();
+        match instruction {
+            LedInstruction::Rect { width, height } => {
+                for h in 0..height {
+                    for w in 0..width {
+                        self.leds[w][h] = true;
+                    }
+                }
+            },
+            LedInstruction::RotateRow { row, steps } => {
+                for _ in 0..steps {
+                    self.shiftrow(row);
+                }
+            },
+            LedInstruction::RotateCol { col, steps } => {
+                for _ in 0..steps {
+                    self.shiftcol(col);
+                }
+            },
+        }
     }
 
     fn pixelcount(&self) -> usize {
-        unimplemented!();
+        self.leds
+            .iter()
+            .map(|col| col.iter().fold(0, |acc: usize, &x| if x { acc + 1 } else { acc }))
+            .sum()
     }
+}
+
+#[test]
+fn test_mutate() {
+    let mut disp = TinyLed::new();
+    disp.mutate(LedInstruction::Rect {
+        width: 3,
+        height: 2,
+    });
+    assert_eq!(disp.pixelcount(), 6);
+}
+
+#[test]
+fn test_mutate_line() {
+    let mut disp = TinyLed::new();
+    disp.mutate(LedInstruction::Rect {
+        width: 25,
+        height: 1,
+    });
+    assert_eq!(disp.pixelcount(), 25);
 }
 
 fn parse(inst: &str) -> LedInstruction {
@@ -93,4 +169,6 @@ fn main() {
         display.mutate(parse(&line.unwrap()));
     }
     println!("Pixels: {}", display.pixelcount());
+
+    display.fmt();
 }
