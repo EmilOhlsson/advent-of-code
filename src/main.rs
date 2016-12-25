@@ -18,8 +18,9 @@ fn decompress(cnt: &str) -> usize {
         let (exp, trail) = itoks[1].split_at(factors[0]);
         next = String::from(trail);
 
+        let intd = decompress(exp);
         for _ in 0..factors[1] {
-            size += exp.len();
+            size += intd;
         }
     }
 
