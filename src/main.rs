@@ -1,13 +1,13 @@
 use std::fs::File;
 use std::io::{Read, BufReader};
 
-fn decompress(cnt: &str) -> String {
+fn decompress(cnt: &str) -> usize {
     let mut next = String::from(cnt);
-    let mut decompressed = String::new();
+    let mut size: usize = 0;
 
     loop {
         let toks: Vec<String> = next.splitn(2, '(').map(|x| String::from(x)).collect();
-        decompressed.push_str(&toks[0]);
+        size += toks[0].len();
         if toks.len() < 2 {
             break;
         }
@@ -19,11 +19,11 @@ fn decompress(cnt: &str) -> String {
         next = String::from(trail);
 
         for _ in 0..factors[1] {
-            decompressed.push_str(exp);
+            size += exp.len();
         }
     }
 
-    decompressed
+    return size;
 }
 
 #[test]
@@ -50,6 +50,6 @@ fn main() {
     };
     if let Ok(_) = input.read_to_string(&mut buffer) {
         let decompressed = decompress(&buffer.trim());
-        println!("decompressed size: {}", decompressed.len());
+        println!("decompressed size: {}", decompressed);
     }
 }
