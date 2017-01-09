@@ -54,7 +54,7 @@ fn main() {
     let program: Vec<Inst> = input.lines().map(parse_line).collect();
 
     let mut pc = 0usize;
-    let mut registers = [0; 4];
+    let mut registers = [0, 0, 1, 0];
     while pc < program.len() {
         match program[pc] {
             Inst::Cpy { ref src, dst } => {
@@ -68,7 +68,7 @@ fn main() {
                     Src::Reg(i) => registers[i],
                     Src::Val(val) => val,
                 } != 0 {
-                    pc == (pc as isize + offs) as usize;
+                    pc = (pc as isize + offs) as usize;
                     continue;
                 }
             }
