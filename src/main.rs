@@ -6,7 +6,7 @@ struct Node<T: Display> {
     childs: Vec<Node<T>>,
 }
 
-impl <T: Display> Node<T> {
+impl<T: Display> Node<T> {
     fn new(data: T) -> Node<T> {
         Node {
             data: data,
@@ -37,35 +37,72 @@ impl <T: Display> Node<T> {
     }
 }
 
-/* State
- * (1-4, 1-4, 1-4, 1-4, 1-4)
- * (1, 2, 1, 3, 1) ->
- *      (2, 2, 2, 3, 2)
- *      (2, 2, 2, 3, 1)
- *      (2, 2, 1, 3, 2)
- */
-fn moves(state: &[i32; 5]) -> Vec<[i32; 5]> {
-    let mut mv = Vec::new();
-    {
-        let f_new = state[0] + 1;
-        if f_new < 4 {
-            for (i, f) in state.iter().enumerate() {
-                println!("({},{})", i, f);
+// State
+// (1-4, 1-4, 1-4, 1-4, 1-4)
+// (1, 2, 1, 3, 1) ->
+//      (2, 2, 2, 3, 2) (0, 1, 0, 1)
+//      (2, 2, 2, 3, 1) (0, 1, 0, 0)
+//      (2, 2, 1, 3, 2) (0, 0, 0, 1)
+
+struct State {
+    elev: isize,
+    floors: [isize; 4],
+}
+
+type Move = [isize; 4];
+const FLOORS: isize = 4;
+fn moves(state: &State) -> Vec<Move> {
+    fn valid_move(state: &State, filled: isize, mv: &Move) -> bool {
+        if filled <= 0 || filled >= 2 {
+            return false;
+        }
+        true
+    }
+    fn add_moves(state: &State,
+           dir: isize,
+           offs: usize,
+           filled: isize,
+           moves: &mut Vec<Move>,
+           buffer: &mut Move) {
+        if filled >= 2 {
+            return;
+        }
+        for i in (offs)..(buffer.len()) {
+            if state.floors[i] == state.elev {
+                buffer[i] = dir;
+                if valid_move(state, filled, &buffer) {
+                    moves.push(buffer.clone());
+                }
+                add_moves(state, dir, i + 1, filled + 1, moves, buffer);
+                buffer[i] = 0;
+                add_moves(state, dir, i + 1, filled, moves, buffer);
             }
         }
     }
+
+    let mut mv = Vec::new();
+
+    if state.elev + 1 <= FLOORS {
+        let mut buffer: Move = [0; 4];
+        add_moves(state, 1, 0, 0, &mut mv, &mut buffer);
+    }
+
+    if state.elev - 1 >= 1 {
+        let mut buffer: Move = [0; 4];
+        add_moves(state, -1, 0, 0, &mut mv, &mut buffer);
+    }
+
     mv
 }
 
 fn main() {
-    /* TODO: Build representation of state (preferably small)
-     * and then build a tree of all the initial moves, and
-     * then search down and remove sub-trees which are dead
-     * ends */
+    // TODO: Build representation of state (preferably small)
+    // and then build a tree of all the initial moves, and
+    // then search down and remove sub-trees which are dead
+    // ends
 
-    /* Possible implementation: Create an iterator that
-     * iterates of the nodes in the tree? */
-    println!("Hello, world!");
+    // Possible implementation: Create an iterator that
+    // iterates of the nodes in the tree?
 
     let mut root = Node::new(1);
     let mut ch_left = Node::new(2);
@@ -80,5 +117,12 @@ fn main() {
 
     root.game_tree_search();
 
-    moves(&[1, 2, 1, 3, 1]);
+    let state = State {
+        elev: 1,
+        floors: [2, 1, 3 ,1],
+    };
+    let mvs = moves(&state);
+    for m in mvs {
+        println!("{:?}", m);
+    }
 }
