@@ -53,7 +53,7 @@ type Move = [isize; 4];
 const FLOORS: isize = 4;
 fn moves(state: &State) -> Vec<Move> {
     fn valid_move(state: &State, filled: isize, mv: &Move) -> bool {
-        if filled <= 0 || filled >= 2 {
+        if filled > 2 {
             return false;
         }
         true
@@ -64,18 +64,28 @@ fn moves(state: &State) -> Vec<Move> {
            filled: isize,
            moves: &mut Vec<Move>,
            buffer: &mut Move) {
-        if filled >= 2 {
+        if filled >= 2 || offs >= buffer.len() {
             return;
         }
         for i in (offs)..(buffer.len()) {
             if state.floors[i] == state.elev {
+                println!("i = {}, floor = {}", i, state.floors[i]);
+
+                println!("1 {} - Recursing with {:?}", i, buffer);
+                add_moves(state, dir, i + 1, filled, moves, buffer);
+
                 buffer[i] = dir;
-                if valid_move(state, filled, &buffer) {
+                if valid_move(state, filled + 1, &buffer) {
+                    println!("pushing: {:?}", buffer);
                     moves.push(buffer.clone());
+                } else {
+                    println!("{:?} is not a valid move", buffer);
                 }
+
+                println!("2 {} - Recursing with {:?}", i, buffer);
                 add_moves(state, dir, i + 1, filled + 1, moves, buffer);
                 buffer[i] = 0;
-                add_moves(state, dir, i + 1, filled, moves, buffer);
+                return;
             }
         }
     }
