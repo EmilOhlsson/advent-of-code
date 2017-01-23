@@ -59,11 +59,11 @@ fn moves(state: &State) -> Vec<Move> {
         true
     }
     fn add_moves(state: &State,
-           dir: isize,
-           offs: usize,
-           filled: isize,
-           moves: &mut Vec<Move>,
-           buffer: &mut Move) {
+                 dir: isize,
+                 offs: usize,
+                 filled: isize,
+                 moves: &mut Vec<Move>,
+                 buffer: &mut Move) {
         if filled >= 2 || offs >= buffer.len() {
             return;
         }
@@ -129,7 +129,7 @@ fn main() {
 
     let state = State {
         elev: 1,
-        floors: [2, 1, 3 ,1],
+        floors: [2, 1, 3, 1],
     };
     let mvs = moves(&state);
     for m in mvs {
