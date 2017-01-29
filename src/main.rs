@@ -1,138 +1,119 @@
-use std::fmt::Display;
+#![feature(step_by)]
+
+use std::fmt;
 use std::collections::VecDeque;
 
-struct Node<T: Display> {
-    data: T,
-    childs: Vec<Node<T>>,
-}
+const FLOORS: usize = 4;
+const TYPES: usize = 10;
 
-impl<T: Display> Node<T> {
-    fn new(data: T) -> Node<T> {
-        Node {
-            data: data,
-            childs: Vec::new(),
-        }
-    }
-
-    fn add(&mut self, data: T) {
-        self.childs.push(Node::new(data));
-    }
-
-    fn attach(&mut self, node: Node<T>) {
-        self.childs.push(node);
-    }
-
-    /**
-     * Currently prints the tree breadth first
-     */
-    fn game_tree_search(&self) {
-        let mut queue: VecDeque<&Node<T>> = VecDeque::new();
-        queue.push_back(&self);
-
-        while !queue.is_empty() {
-            let n = queue.pop_front().unwrap();
-            n.childs.iter().map(|n| queue.push_back(&n)).last();
-            println!("node: {}", n.data);
-        }
-    }
-}
-
-// State
-// (1-4, 1-4, 1-4, 1-4, 1-4)
-// (1, 2, 1, 3, 1) ->
-//      (2, 2, 2, 3, 2) (0, 1, 0, 1)
-//      (2, 2, 2, 3, 1) (0, 1, 0, 0)
-//      (2, 2, 1, 3, 2) (0, 0, 0, 1)
+type Move = [isize; TYPES];
 
 struct State {
     elev: isize,
-    floors: [isize; 4],
+    floors: [isize; TYPES],
 }
 
-type Move = [isize; 4];
-const FLOORS: isize = 4;
-fn moves(state: &State) -> Vec<Move> {
-    fn valid_move(state: &State, filled: isize, mv: &Move) -> bool {
-        if filled > 2 {
-            return false;
-        }
-        true
+impl fmt::Display for State {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}: {:?}", self.elev, self.floors)
     }
-    fn add_moves(state: &State,
-                 dir: isize,
-                 offs: usize,
-                 filled: isize,
-                 moves: &mut Vec<Move>,
-                 buffer: &mut Move) {
-        if filled >= 2 || offs >= buffer.len() {
-            return;
-        }
-        for i in (offs)..(buffer.len()) {
-            if state.floors[i] == state.elev {
-                println!("i = {}, floor = {}", i, state.floors[i]);
+}
 
-                println!("1 {} - Recursing with {:?}", i, buffer);
-                add_moves(state, dir, i + 1, filled, moves, buffer);
+impl State {
+    fn done(&self) -> bool {
+        self.floors.iter().filter(|&l| *l == FLOORS as isize).count() == TYPES
+    }
 
-                buffer[i] = dir;
-                if valid_move(state, filled + 1, &buffer) {
-                    println!("pushing: {:?}", buffer);
-                    moves.push(buffer.clone());
-                } else {
-                    println!("{:?} is not a valid move", buffer);
+    fn next(&self) -> Vec<State> {
+        fn valid_move(state: &State, dir: isize, mv: &Move) -> Option<State> {
+            let f: Vec<isize> = state.floors.iter().zip(mv.iter()).map(|(a, b)| a + b).collect();
+            let e = state.elev + dir;
+
+            // Look for killed chips
+            for g in (0..TYPES).step_by(2) {
+                for m in (1..TYPES).step_by(2) {
+                    if f[m] == f[g] && f[m] != f[m - 1] {
+                        return None;
+                    }
                 }
+            }
 
-                println!("2 {} - Recursing with {:?}", i, buffer);
-                add_moves(state, dir, i + 1, filled + 1, moves, buffer);
-                buffer[i] = 0;
+            Some(State {
+                elev: e,
+                floors: [f[0], f[1], f[2], f[3], f[4],  f[5],  f[6],  f[7],  f[8],  f[9]],
+            })
+        }
+        fn add_moves(state: &State,
+                     dir: isize,
+                     offs: usize,
+                     filled: isize,
+                     moves: &mut Vec<State>,
+                     buffer: &mut Move) {
+            if filled >= 2 || offs >= buffer.len() {
                 return;
             }
+            for i in (offs)..(buffer.len()) {
+                if state.floors[i] == state.elev {
+                    add_moves(state, dir, i + 1, filled, moves, buffer);
+
+                    buffer[i] = dir;
+                    if let Some(new_state) = valid_move(&state, dir, &buffer) {
+                        moves.push(new_state);
+                    }
+
+                    add_moves(state, dir, i + 1, filled + 1, moves, buffer);
+                    buffer[i] = 0;
+                    return;
+                }
+            }
         }
+
+        let mut mv = Vec::new();
+
+        if self.elev + 1 <= FLOORS as isize {
+            let mut buffer: Move = [0; TYPES];
+            add_moves(self, 1, 0, 0, &mut mv, &mut buffer);
+        }
+
+        if self.elev - 1 >= 1 as isize {
+            let mut buffer: Move = [0; TYPES];
+            add_moves(self, -1, 0, 0, &mut mv, &mut buffer);
+        }
+
+        mv
     }
 
-    let mut mv = Vec::new();
+    fn game_tree_search(&self) -> usize  {
+        let mut queue: VecDeque<(State, usize)> = VecDeque::new();
 
-    if state.elev + 1 <= FLOORS {
-        let mut buffer: Move = [0; 4];
-        add_moves(state, 1, 0, 0, &mut mv, &mut buffer);
+        // Generate States
+        for s in self.next() {
+            queue.push_back((s, 1));
+        }
+
+        while let Some((state, depth)) = queue.pop_front() {
+            for s in state.next() {
+                if s.done() {
+                    return depth + 1;
+                }
+                queue.push_back((s, depth + 1));
+            }
+        }
+
+        panic!("Unable to find finishing move");
     }
-
-    if state.elev - 1 >= 1 {
-        let mut buffer: Move = [0; 4];
-        add_moves(state, -1, 0, 0, &mut mv, &mut buffer);
-    }
-
-    mv
 }
 
 fn main() {
-    // TODO: Build representation of state (preferably small)
-    // and then build a tree of all the initial moves, and
-    // then search down and remove sub-trees which are dead
-    // ends
-
-    // Possible implementation: Create an iterator that
-    // iterates of the nodes in the tree?
-
-    let mut root = Node::new(1);
-    let mut ch_left = Node::new(2);
-    let mut ch_right = Node::new(3);
-    ch_left.add(4);
-    ch_left.add(5);
-    ch_right.add(6);
-    ch_right.add(7);
-    ch_right.add(8);
-    root.attach(ch_left);
-    root.attach(ch_right);
-
-    root.game_tree_search();
-
     let state = State {
         elev: 1,
-        floors: [2, 1, 3, 1],
+        floors: [1, 1, 1, 1, 2, 3, 2, 2, 2, 2],
     };
-    let mvs = moves(&state);
-    for m in mvs {
-        println!("{:?}", m);
-    }
+
+    let moves = state.game_tree_search();
+    println!("Took {} moves to finish", moves);
 }
+/* strontium, plutonium, thulium, ruthenium curium
+ *
+ * [1, 1, 1, 1, 2, 3, 2, 2, 2, 2] 
+ */
