@@ -24,6 +24,10 @@ impl State {
         self.floors.iter().filter(|&l| *l == FLOORS as isize).count() == TYPES
     }
 
+    fn min_floor(&self) -> isize {
+        *self.floors.iter().min().unwrap()
+    }
+
     fn next(&self) -> Vec<State> {
         fn valid_move(state: &State, dir: isize, mv: &Move) -> Option<State> {
             let f: Vec<isize> = state.floors.iter().zip(mv.iter()).map(|(a, b)| a + b).collect();
@@ -70,6 +74,7 @@ impl State {
 
         let mut mv = Vec::new();
 
+        // TODO if lower floors are empty, don't go there
         if self.elev + 1 <= FLOORS as isize {
             let mut buffer: Move = [0; TYPES];
             add_moves(self, 1, 0, 0, &mut mv, &mut buffer);
@@ -91,9 +96,22 @@ impl State {
             queue.push_back((s, 1));
         }
 
+        let mut d = 0;
+
+        let mut min_floor = 0;
         while let Some((state, depth)) = queue.pop_front() {
+            if depth != d {
+                d = depth;
+                println!("now on depth {}, and {} moves to process, min_floor = {}", d, queue.len(), min_floor);
+            }
             for s in state.next() {
-                if s.done() {
+                let min = s.min_floor();
+                if min > min_floor {
+                    min_floor = min;
+                    queue.clear();
+                    queue.push_back((s, depth + 1));
+                    break;
+                } else if s.done() {
                     return depth + 1;
                 }
                 queue.push_back((s, depth + 1));
