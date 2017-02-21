@@ -1,13 +1,16 @@
 #![feature(step_by)]
 
 use std::fmt;
-use std::collections::VecDeque;
+use std::collections::{BinaryHeap, HashSet, HashMap};
+use std::hash::{Hash, Hasher};
+use std::cmp::Ordering;
 
-const FLOORS: usize = 4;
+const FLOORS: isize = 4;
 const TYPES: usize = 10;
 
 type Move = [isize; TYPES];
 
+#[derive(Copy, Clone)]
 struct State {
     elev: isize,
     floors: [isize; TYPES],
@@ -19,16 +22,40 @@ impl fmt::Display for State {
     }
 }
 
+impl PartialEq for State {
+    fn eq(&self, other: &State) -> bool {
+        // TODO could be that this need to be optimized
+        self.elev == other.elev && self.floors == other.floors
+    }
+}
+
+impl Hash for State {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.elev.hash(state);
+        self.floors.hash(state);
+    }
+}
+
+impl Eq for State {}
+
+impl Ord for State {
+    fn cmp(&self, other: &State) -> Ordering {
+        other.distance().cmp(&self.distance())
+    }
+}
+
+impl PartialOrd for State {
+    fn partial_cmp(&self, other: &State) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 impl State {
-    fn done(&self) -> bool {
-        self.floors.iter().filter(|&l| *l == FLOORS as isize).count() == TYPES
+    fn distance(&self) -> isize {
+        self.floors.iter().fold(0, |sum, floor| sum + FLOORS - floor)
     }
 
-    fn min_floor(&self) -> isize {
-        *self.floors.iter().min().unwrap()
-    }
-
-    fn next(&self) -> Vec<State> {
+    fn adjacent_states(&self) -> Vec<State> {
         fn valid_move(state: &State, dir: isize, mv: &Move) -> Option<State> {
             let f: Vec<isize> = state.floors.iter().zip(mv.iter()).map(|(a, b)| a + b).collect();
             let e = state.elev + dir;
@@ -47,7 +74,7 @@ impl State {
                 floors: [f[0], f[1], f[2], f[3], f[4],  f[5],  f[6],  f[7],  f[8],  f[9]],
             })
         }
-        fn add_moves(state: &State,
+        fn get_moves(state: &State,
                      dir: isize,
                      offs: usize,
                      filled: isize,
@@ -58,14 +85,14 @@ impl State {
             }
             for i in (offs)..(buffer.len()) {
                 if state.floors[i] == state.elev {
-                    add_moves(state, dir, i + 1, filled, moves, buffer);
+                    get_moves(state, dir, i + 1, filled, moves, buffer);
 
                     buffer[i] = dir;
                     if let Some(new_state) = valid_move(&state, dir, &buffer) {
                         moves.push(new_state);
                     }
 
-                    add_moves(state, dir, i + 1, filled + 1, moves, buffer);
+                    get_moves(state, dir, i + 1, filled + 1, moves, buffer);
                     buffer[i] = 0;
                     return;
                 }
@@ -74,51 +101,47 @@ impl State {
 
         let mut mv = Vec::new();
 
-        // TODO if lower floors are empty, don't go there
         if self.elev + 1 <= FLOORS as isize {
             let mut buffer: Move = [0; TYPES];
-            add_moves(self, 1, 0, 0, &mut mv, &mut buffer);
+            get_moves(self, 1, 0, 0, &mut mv, &mut buffer);
         }
 
         if self.elev - 1 >= 1 as isize {
             let mut buffer: Move = [0; TYPES];
-            add_moves(self, -1, 0, 0, &mut mv, &mut buffer);
+            // No point in moving two down
+            get_moves(self, -1, 0, 0, &mut mv, &mut buffer);
         }
 
         mv
     }
 
-    fn game_tree_search(&self) -> usize  {
-        let mut queue: VecDeque<(State, usize)> = VecDeque::new();
+    fn game_tree_search(&self) -> Option<usize>  {
+        let mut closed: HashSet<State> = HashSet::new();
+        let mut open: BinaryHeap<State> = BinaryHeap::new();
+        let mut g_score: HashMap<State, usize> = HashMap::new();
 
-        // Generate States
-        for s in self.next() {
-            queue.push_back((s, 1));
-        }
+        open.push(self.clone());
+        g_score.entry(*self).or_insert(0);
 
-        let mut d = 0;
-
-        let mut min_floor = 0;
-        while let Some((state, depth)) = queue.pop_front() {
-            if depth != d {
-                d = depth;
-                println!("now on depth {}, and {} moves to process, min_floor = {}", d, queue.len(), min_floor);
+        while let Some(current) = open.pop() {
+            if current.distance() == 0 {
+                return Some(g_score[&current]);
             }
-            for s in state.next() {
-                let min = s.min_floor();
-                if min > min_floor {
-                    min_floor = min;
-                    queue.clear();
-                    queue.push_back((s, depth + 1));
-                    break;
-                } else if s.done() {
-                    return depth + 1;
+            closed.insert(current.clone());
+            let neighbours: Vec<State> = current.adjacent_states();
+            for n in neighbours.iter().filter(|s| !closed.contains(s)) {
+                if open.iter().find(|&&x| x == *n) == None {
+                    open.push(n.clone());
                 }
-                queue.push_back((s, depth + 1));
+                let tent_gscore = g_score[&current] + 1;
+                let score = g_score.entry(*n).or_insert(std::usize::MAX);
+                if *score >= tent_gscore {
+                    *score = tent_gscore;
+                }
             }
         }
 
-        panic!("Unable to find finishing move");
+        None
     }
 }
 
@@ -128,10 +151,9 @@ fn main() {
         floors: [1, 1, 1, 1, 2, 3, 2, 2, 2, 2],
     };
 
-    let moves = state.game_tree_search();
-    println!("Took {} moves to finish", moves);
+    if let Some(moves) = state.game_tree_search() {
+        println!("Took {} moves to finish", moves);
+    } else {
+        println!("Unable to find path");
+    }
 }
-/* strontium, plutonium, thulium, ruthenium curium
- *
- * [1, 1, 1, 1, 2, 3, 2, 2, 2, 2] 
- */
