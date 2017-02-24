@@ -16,16 +16,23 @@ struct State {
     floors: [isize; TYPES],
 }
 
-impl fmt::Display for State {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}: {:?}", self.elev, self.floors)
+struct ScoredState {
+    state: State,
+    score: usize,
+}
+
+impl ScoredState {
+    fn new(state: State, score: usize) -> ScoredState {
+        ScoredState {
+            state: state,
+            score: score,
+        }
     }
 }
 
-impl PartialEq for State {
-    fn eq(&self, other: &State) -> bool {
-        // TODO could be that this need to be optimized
-        self.elev == other.elev && self.floors == other.floors
+impl fmt::Display for State {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}: {:?}", self.elev, self.floors)
     }
 }
 
@@ -38,14 +45,29 @@ impl Hash for State {
 
 impl Eq for State {}
 
-impl Ord for State {
-    fn cmp(&self, other: &State) -> Ordering {
-        other.distance().cmp(&self.distance())
+impl PartialEq for State {
+    fn eq(&self, other: &State) -> bool {
+        // TODO could be that this need to be optimized
+        self.elev == other.elev && self.floors == other.floors
     }
 }
 
-impl PartialOrd for State {
-    fn partial_cmp(&self, other: &State) -> Option<Ordering> {
+impl Eq for ScoredState {}
+
+impl PartialEq for ScoredState {
+    fn eq(&self, other: &ScoredState) -> bool {
+        self.state == other.state
+    }
+}
+
+impl Ord for ScoredState {
+    fn cmp(&self, other: &ScoredState) -> Ordering {
+        other.score.cmp(&self.score)
+    }
+}
+
+impl PartialOrd for ScoredState {
+    fn partial_cmp(&self, other: &ScoredState) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -109,34 +131,54 @@ impl State {
         if self.elev - 1 >= 1 as isize {
             let mut buffer: Move = [0; TYPES];
             // No point in moving two down
-            get_moves(self, -1, 0, 0, &mut mv, &mut buffer);
+            get_moves(self, -1, 1, 0, &mut mv, &mut buffer);
         }
 
         mv
     }
 
     fn game_tree_search(&self) -> Option<usize>  {
+        let mut open: BinaryHeap<ScoredState> = BinaryHeap::new();
         let mut closed: HashSet<State> = HashSet::new();
-        let mut open: BinaryHeap<State> = BinaryHeap::new();
+
+        /* g_score, cost of getting from start to that node */
         let mut g_score: HashMap<State, usize> = HashMap::new();
 
-        open.push(self.clone());
-        g_score.entry(*self).or_insert(0);
+        /* f_score, the cost of getting from start to finish by passing that node */
+        let mut f_score: HashMap<State, usize> = HashMap::new();
 
-        while let Some(current) = open.pop() {
+        open.push(ScoredState::new(self.clone(), 100));
+        g_score.entry(*self).or_insert(0);
+        f_score.entry(*self).or_insert(100);
+
+        /* Debugging */
+        let mut temp_level = 1usize;
+        let mut temp_track = 0usize;
+
+        while let Some(ScoredState{state: current, ..}) = open.pop() {
+            /* Length is checked above */
             if current.distance() == 0 {
                 return Some(g_score[&current]);
             }
+
+            temp_track += 1;
+            if temp_track >= temp_level {
+                temp_level *= 10;
+                println!("{} entries in open, and current passing score is {}, and node score is {}, distance {}", 
+                         open.len(), f_score[&current], g_score[&current], current.distance());
+            }
+
+            /* No need to revisit */
             closed.insert(current.clone());
             let neighbours: Vec<State> = current.adjacent_states();
             for n in neighbours.iter().filter(|s| !closed.contains(s)) {
-                if open.iter().find(|&&x| x == *n) == None {
-                    open.push(n.clone());
-                }
                 let tent_gscore = g_score[&current] + 1;
-                let score = g_score.entry(*n).or_insert(std::usize::MAX);
-                if *score >= tent_gscore {
-                    *score = tent_gscore;
+                let tent_fscore = tent_gscore + n.distance() as usize;
+
+                open.push(ScoredState::new(n.clone(), tent_fscore));
+                if tent_gscore < *g_score.entry(*n).or_insert(std::usize::MAX) {
+                    g_score.insert(*n, tent_gscore);
+                    f_score.insert(*n, tent_gscore + n.distance() as usize);
                 }
             }
         }
