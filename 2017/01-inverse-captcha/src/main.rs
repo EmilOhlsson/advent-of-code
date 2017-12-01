@@ -9,7 +9,7 @@ fn main() {
     let code = buffer.chars().filter_map(|c| c.to_digit(10)).collect::<Vec<u32>>();
     let mut sum = 0;
     for (i, &n) in code.iter().enumerate() {
-        let i_n = (i + 1) % code.len();
+        let i_n = (i + code.len() / 2) % code.len();
         sum += if n == code[i_n] { n } else { 0 };
     }
     println!("sum: {}", sum);
