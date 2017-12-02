@@ -2,7 +2,11 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 fn checksum(line: String) -> usize {
-    let vals = line.split_whitespace().map(str::parse::<usize>).map(Result::unwrap).collect::<Vec<_>>();
+    let vals = line.split_whitespace()
+        .map(str::parse::<usize>)
+        .map(Result::unwrap)
+        .collect::<Vec<_>>();
+
     for &n in &vals {
         if let Some(&o) = vals.iter().find(|&&o| o != n && o % n == 0) {
             return o / n;
