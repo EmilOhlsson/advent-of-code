@@ -1,12 +1,14 @@
 use std::fs::File;
-use std::cmp;
 use std::io::{BufRead, BufReader};
 
 fn checksum(line: String) -> usize {
-    let mm = line.split_whitespace()
-        .map(str::parse::<usize>).map(Result::unwrap)
-        .fold((std::usize::MAX, 0), |a, x| (cmp::min(x, a.0), cmp::max(x, a.1)));
-    return mm.1 - mm.0;
+    let vals = line.split_whitespace().map(str::parse::<usize>).map(Result::unwrap).collect::<Vec<_>>();
+    for &n in &vals {
+        if let Some(&o) = vals.iter().find(|&&o| o != n && o % n == 0) {
+            return o / n;
+        }
+    }
+    panic!("Could not find divisable on line");
 }
 
 fn main() {
