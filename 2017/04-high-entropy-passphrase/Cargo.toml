@@ -1,0 +1,6 @@
+[package]
+name = "high-entropy-passphrase"
+version = "0.1.0"
+authors = ["Emil Ohlsson <emil@kottland.net>"]
+
+[dependencies]
