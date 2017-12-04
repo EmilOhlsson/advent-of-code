@@ -1,6 +1,17 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::collections::{HashSet};
+use std::collections::{HashSet,BTreeMap};
+
+type Word = BTreeMap<char, usize>;
+
+fn as_word(string: String) -> Word {
+	let mut word = Word::new();
+	string.chars().for_each(|c| {
+		let entry = word.entry(c).or_insert(0);
+		*entry += 1;
+	});
+	return word;
+}
 
 fn check_phrase(line: String) -> bool {
 	let mut set = HashSet::new();
@@ -9,8 +20,9 @@ fn check_phrase(line: String) -> bool {
 		.split_whitespace()
 		.for_each(|t| {
 			let tok = String::from(t);
-			if set.contains(&tok) {valid = false;}
-			else {set.insert(tok);}
+			let word = as_word(tok);
+			if set.contains(&word) {valid = false;}
+			else {set.insert(word);}
 		});
 	return valid;
 }
