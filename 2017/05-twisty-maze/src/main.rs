@@ -15,8 +15,8 @@ fn main() {
     let mut i_p = 0;
     loop {
         i += instructions[i as usize];
-        instructions[i_p as usize] += 1;
-        jumps += if instructions[i_p as usize] >= 3 { -1 } else { 1 };
+        instructions[i_p as usize] += if instructions[i_p as usize] >= 3 { -1 } else { 1 };
+        jumps += 1;
         if i >= instructions.len() as isize || i < 0 { break; }
         i_p = i;
     }
