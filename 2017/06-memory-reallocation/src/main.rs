@@ -1,25 +1,26 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 fn loop_length(mut banks: Vec<usize>) -> usize {
-    let mut set = HashSet::new();
-    set.insert(banks.clone());
+    let mut set = HashMap::new();
     let l = banks.len();
-    loop {
+    for cycle in 0usize.. {
+        set.insert(banks.clone(), cycle);
         let (i, v) = banks.iter().enumerate()
             .fold((0, 0), |m, (i, &v)| if v > m.1 { (i, v) } else { m });
         banks[i] = 0;
         for d in 0..v {
             banks[(i + d + 1) % l] += 1;
         }
-        if set.contains(&banks) { break; }
-        set.insert(banks.clone());
+        if let Some(prev_cycle) = set.get(&banks) {
+            return cycle - prev_cycle + 1;
+        }
     }
-    return set.len();
+    panic!("fail!");
 }
 
 #[test]
 fn test_loop_length() {
-    assert_eq!(loop_length(vec![0, 2, 7, 0]), 5);
+    assert_eq!(loop_length(vec![0, 2, 7, 0]), 4);
 }
 
 fn main() {
