@@ -3,36 +3,77 @@ use std::io::{BufRead, BufReader};
 use std::cmp;
 
 enum Dest {
-    Node(usize),
+    Bot(usize),
     Out(usize),
 }
 
 struct Input {
     value: usize,
-    destination: Dest,
+    destination: usize,
 }
 
 struct Bot {
     lo_dest: Dest,
     hi_dest: Dest,
-    inputs: Vec<usize>,
+    chips: Vec<usize>,
+}
+
+
+impl Bot {
+    fn give(&mut self, chip: usize) {
+        self.chips.push(chip);
+        self.chips.sort();
+    }
+
+    fn ready(&self) -> bool { self.chips.len() == 2 }
 }
 
 struct BotArena {
     bots: Vec<Bot>,
     inputs: Vec<Input>,
+    size: usize,
 }
 
 impl BotArena {
     fn new() -> BotArena {
-        BotArena {
-            bots: Vec::with_capacity(256),
+        let mut arena = BotArena {
+            bots: Vec::new(),
             inputs: Vec::new(),
+            size: 0,
+        };
+        for _ in 0..256 {
+            arena.bots.push(Bot {
+                lo_dest: Dest::Bot(0),
+                hi_dest: Dest::Bot(0),
+                chips: Vec::new(),
+            });
         }
+        arena
     }
 
     fn reduce(&mut self) -> usize {
-        0
+        self.bots.truncate(self.size);
+        for ref v in self.inputs.iter() { 
+            self.bots[v.destination].give(v.value);
+        }
+        loop {
+            for i in 0..self.size {
+                if !self.bots[i].ready() { continue; }
+                if self.bots[i].chips.contains(&61) &&
+                   self.bots[i].chips.contains(&17) {
+                    return i;
+                }
+                if let Dest::Bot(lo) = self.bots[i].lo_dest {
+                    let v = self.bots[i].chips[0];
+                    self.bots[lo].give(v);
+                }
+                if let Dest::Bot(hi) = self.bots[i].hi_dest {
+                    let v = self.bots[i].chips[1];
+                    self.bots[hi].give(v);
+                }
+                self.bots[i].chips.clear();
+            }
+        }
     }
 }
 
@@ -41,19 +82,21 @@ fn line_parse(mut arena: BotArena, line: String) -> BotArena {
     if toks[0]  == "value" {
         arena.inputs.push(Input {
             value: toks[1].parse::<usize>().unwrap(),
-            destination: Dest::Node(toks[5].parse::<usize>().unwrap()),
+            destination: toks[5].parse::<usize>().unwrap(),
         });
     } else {
-        arena.bots[toks[1].parse::<usize>().unwrap()] = Bot {
+        let index = toks[1].parse::<usize>().unwrap();
+        arena.size = cmp::max(index + 1, arena.size);
+        arena.bots[index] = Bot {
             lo_dest: match toks[5] {
-                "bot" => Dest::Node(toks[6].parse::<usize>().unwrap()),
+                "bot" => Dest::Bot(toks[6].parse::<usize>().unwrap()),
                 _ => Dest::Out(toks[6].parse::<usize>().unwrap()),
             },
             hi_dest: match toks[10] {
-                "bot" => Dest::Node(toks[11].parse::<usize>().unwrap()),
+                "bot" => Dest::Bot(toks[11].parse::<usize>().unwrap()),
                 _ => Dest::Out(toks[11].parse::<usize>().unwrap()),
             },
-            inputs: Vec::new(),
+            chips: Vec::new(),
         };
     }
 
