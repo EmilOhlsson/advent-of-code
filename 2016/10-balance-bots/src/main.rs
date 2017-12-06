@@ -56,13 +56,26 @@ impl BotArena {
         for ref v in self.inputs.iter() { 
             self.bots[v.destination].give(v.value);
         }
+        let mut outs = [0, 0, 0];
         loop {
             for i in 0..self.size {
                 if !self.bots[i].ready() { continue; }
+
+                /*
                 if self.bots[i].chips.contains(&61) &&
                    self.bots[i].chips.contains(&17) {
                     return i;
                 }
+                */
+                if let Dest::Out(lo) = self.bots[i].lo_dest {
+                    if lo < 3 {outs[lo] = self.bots[i].chips[0];}
+                }
+                if let Dest::Out(hi) = self.bots[i].hi_dest {
+                    if hi < 3 {outs[hi] = self.bots[i].chips[1];}
+                }
+                let val = outs[0] * outs[1] * outs[2];
+                if val != 0 { return val; }
+
                 if let Dest::Bot(lo) = self.bots[i].lo_dest {
                     let v = self.bots[i].chips[0];
                     self.bots[lo].give(v);
