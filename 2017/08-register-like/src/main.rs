@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 fn main() {
     let mut registers = HashMap::<&str, isize>::new();
+    let mut max_held = 0;
     let input = include_str!("input");
     for l in input.lines() {
         let t = l.split_whitespace().collect::<Vec<&str>>();
@@ -22,8 +23,13 @@ fn main() {
             "==" => cmp_r == cmp_v,
             _ => panic!("Aaaaaargh: {}", t[5]),
         };
-        if expr { *fst += inc }
+        if expr {
+            *fst += inc;
+            if *fst > max_held {
+                max_held = *fst;
+            }
+        }
     }
     let max = registers.values().max().unwrap();
-    println!("{}", max);
+    println!("{}, {}", max, max_held);
 }
