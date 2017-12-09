@@ -4,10 +4,11 @@ enum Kind {
     Garbage,
 }
 
-fn score_stream(stream: &str) -> usize {
+fn score_stream(stream: &str) -> (usize, usize) {
     let mut state = Kind::Group;
     let mut score = 0;
     let mut depth = 0;
+    let mut removed = 0;
     let mut escaped = false;
 
     for ch in stream.chars() {
@@ -36,17 +37,17 @@ fn score_stream(stream: &str) -> usize {
                 match ch {
                 '>' => Kind::Group,
                 '!' => {escaped = true; Kind::Garbage},
-                _ => Kind::Garbage,
+                _ => {removed += 1; Kind::Garbage},
                 }
             },
         }
     }
-    score
+    (score, removed)
 }
 
 fn main() {
-    let input_score = score_stream(include_str!("input.txt").trim());
-    println!("{}", input_score);
+    let (input_score, removed) = score_stream(include_str!("input.txt").trim());
+    println!("{}, {}", input_score, removed);
 }
 
 #[test]
