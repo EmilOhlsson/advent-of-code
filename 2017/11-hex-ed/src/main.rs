@@ -2,6 +2,7 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 use std::ops::Add;
 
+#[derive(Debug, Clone)]
 struct HCord {
     x: isize,
     y: isize,
@@ -47,10 +48,18 @@ impl FromStr for HCord {
 }
 
 fn hex_distance(direction_str: &str) -> isize {
+    let origin = HCord::new(0, 0, 0);
+    let mut furthest = HCord::new(0,0,0);
     let destination: HCord = direction_str.split(',')
         .map(|s| s.parse::<HCord>().unwrap())
-        .fold(HCord::new(0, 0, 0), |a, s| a + s);
-    return destination.distance(&HCord::new(0,0,0));
+        .fold(HCord::new(0, 0, 0), |a, s| {
+            if a.distance(&origin) > furthest.distance(&origin) {
+                furthest = a.clone();
+            }
+            a + s
+        });
+    println!("furthest: {}", furthest.distance(&origin));
+    return destination.distance(&origin);
 }
 
 fn main() {
