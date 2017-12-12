@@ -8,6 +8,18 @@ fn visit_from(start: usize, graph: &Vec<Vec<usize>>, visited: &mut HashSet<usize
     }
 }
 
+fn group_count(graph: &Vec<Vec<usize>>) -> usize {
+    let mut visited = HashSet::<usize>::new();
+    let mut groups = 0;
+    for i in 0..graph.len() {
+        if visited.contains(&i) { continue; }
+        visited.insert(i);
+        groups += 1;
+        visit_from(i, graph, &mut visited);
+    }
+    return groups;
+}
+
 fn parse_input(input: &str) -> Vec<Vec<usize>> {
     input.lines().map(|l| {
         let toks = l.split("<->").collect::<Vec<&str>>();
@@ -17,10 +29,7 @@ fn parse_input(input: &str) -> Vec<Vec<usize>> {
 
 fn main() {
     let graph = parse_input(include_str!("input").trim());
-    let mut visited = HashSet::<usize>::new();
-    visited.insert(0);
-    visit_from(0, &graph, &mut visited);
-    println!("{}", visited.len());
+    println!("{}", group_count(&graph));
 }
 
 #[test]
@@ -30,4 +39,10 @@ fn test_code() {
     visited.insert(0);
     visit_from(0, &graph, &mut visited);
     assert_eq!(visited.len(), 6);
+}
+
+#[test]
+fn test_groups() {
+    let graph = parse_input(include_str!("input-simple").trim());
+    assert_eq!(group_count(&graph), 2);
 }
