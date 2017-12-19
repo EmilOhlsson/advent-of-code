@@ -3,7 +3,7 @@ enum Direction {
 	Up, Down, Left, Right
 }
 
-fn get_string(input: &str) -> String {
+fn get_string(input: &str) -> usize {
 	let mut matrix: Vec<Vec<char>> = Vec::new();
 	for line in input.lines() {
 		let mut l: Vec<char> = Vec::new();
@@ -25,8 +25,9 @@ fn get_string(input: &str) -> String {
 		}
 	}
 
-	let mut result = String::new();
+	let mut steps = 0;
 	loop {
+		steps += 1;
 		let (rn, cn) = match dir {
 			Direction::Up => (r - 1, c),
 			Direction::Down => (r + 1, c),
@@ -62,11 +63,11 @@ fn get_string(input: &str) -> String {
 				}
 			}
 			' ' => break,
-			_ => result.push(matrix[r][c]),
+			_ => (),
 		}
 	}
 
-	return result;
+	return steps;
 }
 
 fn main() {
@@ -77,5 +78,5 @@ fn main() {
 #[test]
 fn test_get_string() {
 	let input = include_str!("input-simple.txt");
-	assert_eq!(get_string(input), "ABCDEF");
+	assert_eq!(get_string(input), 38);
 }
