@@ -1,54 +1,31 @@
-use std::collections::HashMap;
+fn translated() -> isize {
+    let mut b = 81 * 100 + 100_000;
+    let c = b + 17_000;
+    let mut h = 0;
+    let mut g;
 
-fn get<'a>(regs: &mut HashMap<&'a str, isize>, r: &'a str) -> isize {
-    match r.parse::<isize>() {
-        Ok(v) => v,
-        Err(_) => *regs.entry(r).or_insert(0),
-    }
-}
-
-fn emulate(input: &str) -> usize {
-    let mut muls = 0;
-    let mut registers: HashMap<&str, isize> = HashMap::new();
-    let instructions = input.lines().collect::<Vec<&str>>();
-    let mut i = 0;
-
-    while let Some(line) = instructions.get(i as usize) {
-        let ts = line.split_whitespace().collect::<Vec<&str>>();
-        match ts[0] {
-            "set" => {
-                let y = get(&mut registers, ts[2]);
-                let x = registers.entry(ts[1]).or_insert(0);
-                *x = y;
+    while {
+        let mut f = 1;
+        let d = 2;
+        for dp in (d*d)..b { 
+            if b % dp == 0 {
+                f = 0;
+                break;
             }
-            "sub" => {
-                let y = get(&mut registers, ts[2]);
-                let x = registers.entry(ts[1]).or_insert(0);
-                *x -= y;
-            }
-            "mul" => {
-                muls += 1;
-                let y = get(&mut registers, ts[2]);
-                let x = registers.entry(ts[1]).or_insert(0);
-                *x *= y;
-            }
-            "jnz" => {
-                let y = get(&mut registers, ts[2]);
-                let x = get(&mut registers, ts[1]);
-                if x != 0 {
-                    i += y;
-                    continue;
-                }
-            }
-            _ => panic!("AAAAaaargh: {}", ts[0]),
         }
-        i += 1;
-    }
 
-    muls
+
+        if f == 0 {
+            h += 1;
+        }
+
+        g = b - c;
+        b += 17;
+        g != 0
+    } {}
+    h
 }
 
 fn main() {
-    let input = include_str!("input");
-    println!("{}", emulate(input));
+    println!("{}", translated());
 }
