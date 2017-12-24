@@ -8,6 +8,14 @@ enum Direction {
     Right,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+enum Inf {
+    Clean,
+    Weakend,
+    Infected,
+    Flagged,
+}
+
 impl Direction {
     fn left(&self) -> Direction {
         match *self {
@@ -26,16 +34,25 @@ impl Direction {
             Direction::Right => Direction::Down,
         }
     }
+
+    fn back(&self) -> Direction {
+        match *self {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+        }
+    }
 }
 
 struct Virus {
     position: (isize, isize),
     direction: Direction,
-    board: HashMap<(isize, isize), bool>,
+    board: HashMap<(isize, isize), Inf>,
 }
 
 impl Virus {
-    fn new(infects: &[Vec<bool>]) -> Virus {
+    fn new(infects: &[Vec<Inf>]) -> Virus {
         let mut board = HashMap::new();
 
         let len = infects.len();
@@ -55,17 +72,16 @@ impl Virus {
     fn step(&mut self) -> bool {
         let result;
         self.direction = {
-            let direction_new;
-            let position = self.position;
-            let infected = self.board.entry(position).or_insert(false);
-            if *infected {
-                direction_new = self.direction.right();
-            } else {
-                direction_new = self.direction.left();
-            }
-            *infected = !*infected;
-            result = *infected;
-            direction_new
+            let infected = self.board.entry(self.position).or_insert(Inf::Clean);
+            let (new_inf, dir) = match *infected {
+                Inf::Clean => (Inf::Weakend, self.direction.left()),
+                Inf::Weakend => (Inf::Infected, self.direction),
+                Inf::Infected => (Inf::Flagged, self.direction.right()),
+                Inf::Flagged => (Inf::Clean, self.direction.back()),
+            };
+            result = new_inf == Inf::Infected;
+            *infected = new_inf;
+            dir
         };
 
         let (r, c) = self.position;
@@ -82,22 +98,22 @@ impl Virus {
 
 fn main() {
     let input = include_str!("input");
-    let mut infects: Vec<Vec<bool>> = Vec::new();
+    let mut infects: Vec<Vec<Inf>> = Vec::new();
 
     for line in input.lines() {
-        let mut f: Vec<bool> = Vec::new();
+        let mut f: Vec<Inf> = Vec::new();
         for ch in line.trim().chars() {
-            f.push(ch == '#');
+            f.push(if ch == '#' { Inf::Infected } else { Inf::Clean });
         }
         infects.push(f);
     }
 
-    let mut count = 0;
     let mut virus = Virus::new(&infects);
-    for _ in 0..10_000 {
+    let mut count = 0;
+    for _ in 0..10_000_000 {
         if virus.step() {
             count += 1;
-        };
+        }
     }
 
     println!("{}", count);
@@ -106,23 +122,30 @@ fn main() {
 #[test]
 fn test_simple() {
     let input = include_str!("input-simple");
-    let mut infects: Vec<Vec<bool>> = Vec::new();
+    let mut infects: Vec<Vec<Inf>> = Vec::new();
 
     for line in input.lines() {
-        let mut f: Vec<bool> = Vec::new();
+        let mut f: Vec<Inf> = Vec::new();
         for ch in line.trim().chars() {
-            f.push(if ch == '#' { true } else { false });
+            f.push(if ch == '#' { Inf::Infected } else { Inf::Clean });
         }
         infects.push(f);
     }
 
-    let mut count = 0;
     let mut virus = Virus::new(&infects);
-    for _ in 0..10_000 {
+    let mut count = 0;
+    for _ in 0..100 {
         if virus.step() {
             count += 1;
-        };
+        }
     }
 
-    assert_eq!(count, 5587);
+    assert_eq!(count, 26);
+
+    for _ in 100..10_000_000 {
+        if virus.step() {
+            count += 1;
+        }
+    }
+    assert_eq!(count, 2511944);
 }
