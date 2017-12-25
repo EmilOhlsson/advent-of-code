@@ -1,35 +1,34 @@
-use std::collections::LinkedList;
+use std::collections::VecDeque;
 use std::rc::Rc;
 use std::cmp;
 
-fn search(strength: usize, endpoint: usize, available: LinkedList<Rc<(usize, usize)>>) -> usize {
-    let mut candidates = LinkedList::new();
-    let mut left: LinkedList<Rc<(usize, usize)>> = LinkedList::new();
+fn search(length: usize, strength: usize, endpoint: usize, available: &VecDeque<Rc<(usize, usize)>>) -> (usize, usize) {
+    let mut candidates = VecDeque::new();
+    let mut left: VecDeque<Rc<(usize, usize)>> = VecDeque::new();
 
-    for p in &available {
+    for p in available {
         if p.0 == endpoint || p.1 == endpoint {
-            candidates.push_back(p.clone());
+            candidates.push_back(Rc::clone(p));
         } else {
-            left.push_back(p.clone());
+            left.push_back(Rc::clone(p));
         }
     }
 
-    let mut strength_best = strength;
+    let mut best = (length, strength);
     for c in &candidates {
         let ep =
             if c.0 == endpoint { c.1 } else { c.0 };
-        let available_tmp: LinkedList<Rc<(usize, usize)>> = left.iter()
+        let available_tmp: VecDeque<Rc<(usize, usize)>> = left.iter()
             .chain(candidates.iter().filter(|&p| *p != *c))
             .cloned()
-            .collect::<LinkedList<Rc<(usize, usize)>>>();
-        let strength_tmp = search(strength + c.0 + c.1, ep, available_tmp);
-        strength_best = cmp::max(strength_best, strength_tmp);
+            .collect::<VecDeque<Rc<(usize, usize)>>>();
+        best = cmp::max(best, search(length + 1, strength + c.0 + c.1, ep, &available_tmp));
     }
 
-    strength_best
+    best
 }
 
-fn find_strongest(input: &str) -> usize {
+fn find_longest(input: &str) -> usize {
     let available = input
         .lines()
         .map(|l| {
@@ -38,17 +37,17 @@ fn find_strongest(input: &str) -> usize {
                 .collect::<Vec<usize>>();
             Rc::new((ts[0], ts[1]))
         })
-        .collect::<LinkedList<Rc<(usize, usize)>>>();
+        .collect::<VecDeque<Rc<(usize, usize)>>>();
 
-    search(0, 0, available)
+    search(0,0, 0, &available).1
 }
 
 fn main() {
-    println!("{}", find_strongest(include_str!("input")));
+    println!("{}", find_longest(include_str!("input")));
 }
 
 #[test]
 fn test_code() {
     let input = include_str!("input-simple");
-    assert_eq!(find_strongest(input), 31);
+    assert_eq!(find_longest(input), 19);
 }
