@@ -1,0 +1,6 @@
+[package]
+name = "the-halting-problem"
+version = "0.1.0"
+authors = ["Emil Ohlsson <kotte@kottland.net>"]
+
+[dependencies]
