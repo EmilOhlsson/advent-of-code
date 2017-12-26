@@ -277,7 +277,7 @@ fn solve(input: &str, iterations: usize) -> usize {
 
 fn main() {
     let input = include_str!("input");
-    println!("{}", solve(input, 5));
+    println!("{}", solve(input, 18));
 }
 
 #[test]
