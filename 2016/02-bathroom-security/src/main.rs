@@ -4,39 +4,50 @@ use std::io::BufReader;
 use std::io::BufRead;
 
 struct Keypad {
-    row: isize,
-    col: isize,
+    row: usize,
+    col: usize,
 }
+
+static KPAD: [[char; 5]; 5] = [
+    [' ', ' ', '1', ' ', ' '],
+    [' ', '2', '3', '4', ' '],
+    ['5', '6', '7', '8', '9'],
+    [' ', 'A', 'B', 'C', ' '],
+    [' ', ' ', 'D', ' ', ' '],
+];
 
 enum Move {
     Up, Left, Down, Right,
 }
 
-fn clamp(num: isize) -> isize {
-    cmp::min(2, cmp::max(num, 0))
+fn clamp(num: isize) -> usize {
+    cmp::min(KPAD.len() - 1, cmp::max(num, 0) as usize)
 }
 
 impl Keypad {
     fn new() -> Keypad {
         Keypad {
-            row: 1,
-            col: 1,
+            row: 2,
+            col: 2,
         }
     }
 
     fn step(&mut self, mov: Move) {
-        match mov {
-            Move::Up => self.row -= 1,
-            Move::Left => self.col -= 1,
-            Move::Down => self.row += 1,
-            Move::Right => self.col += 1,
+        let (r, c)  = match mov {
+            Move::Up => (clamp(self.row as isize - 1), self.col),
+            Move::Left => (self.row, clamp(self.col as isize - 1)),
+            Move::Down => (clamp(self.row as isize + 1), self.col),
+            Move::Right => (self.row, clamp(self.col as isize + 1)),
+        };
+        
+        if KPAD[r][c].is_alphanumeric() {
+            self.row = r;
+            self.col = c;
         }
-        self.row = clamp(self.row);
-        self.col = clamp(self.col);
     }
 
-    fn key(&self) -> isize {
-        self.row * 3 + self.col + 1
+    fn key(&self) -> char {
+        KPAD[self.row][self.col]
     }
 }
 
