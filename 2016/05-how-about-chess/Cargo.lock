@@ -1,14 +1,14 @@
-[root]
+[[package]]
+name = "gcc"
+version = "0.3.39"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "how-about-chess"
 version = "0.1.0"
 dependencies = [
  "rust-crypto 0.2.36 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "gcc"
-version = "0.3.39"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "kernel32-sys"
