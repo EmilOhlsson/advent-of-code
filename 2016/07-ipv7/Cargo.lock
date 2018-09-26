@@ -1,4 +1,4 @@
-[root]
+[[package]]
 name = "ipv7"
 version = "0.1.0"
 
