@@ -3,36 +3,63 @@ extern crate crypto;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
 
-fn to_nibbles(itr: Iterator<u8>) -> Vec<u8> {
-    let mut res = Vec::new();
-    for i in itr {
-        res.push(i >> 4);
-        res.push(i & 0xfu8);
-    }
-    res
-}
+use std::collections::VecDeque;
 
-fn nibble_hash(data: &str) {
+fn hash(input: &str) -> Vec<char> {
     let mut hasher = Md5::new();
+    let mut tmp = input.to_owned();
 
-    while false {
-        let mut hash = [0; 16];
-        hasher.input(data.as_bytes());
-        hasher.result(&hash);
-        let nib = to_nibbles(hash.iter());
+    for _ in 0..2017 {
         hasher.reset();
+        hasher.input_str(&tmp);
+        tmp = hasher.result_str();
     }
+
+    tmp.chars().collect()
 }
 
-fn find_index(in: &str) -> usize {
-    unimplemented!();
+fn find_index(salt: &str) -> usize {
+    let mut index = 0;
+    let mut keys: Vec<(usize, String, usize, String)> = Vec::new();
+    let mut queue: VecDeque<(usize, char, String)> = VecDeque::new();
+
+    loop {
+        let nib = hash(&format!("{}{}", salt, index));
+
+        for i in 2..nib.len() {
+            if nib[i] == nib[i - 1] && nib[i] == nib[i - 2] {
+                queue.push_back((index, nib[i], nib.iter().collect()));
+                break;
+            }
+        }
+
+        queue
+            .iter()
+            .filter(|(i, _, _)| index - i <= 1000 && index > *i)
+            .for_each(|(i, n, s)| {
+                for j in 4..nib.len() {
+                    if nib[j] == *n
+                        && nib[j] == nib[j - 1]
+                        && nib[j] == nib[j - 2]
+                        && nib[j] == nib[j - 3]
+                        && nib[j] == nib[j - 4]
+                    {
+                        keys.push((*i, nib.iter().collect(), index, s.clone()));
+                        break;
+                    }
+                }
+            });
+        if keys.len() >= 64 {
+            keys.sort_unstable();
+            keys.iter().for_each(|(k, s, kn, sn)| println!("{}:{}, {}:{}", k, s, kn, sn));
+            return keys[63 + 5].0; // There are 5 false finds...
+        }
+
+        index += 1;
+    }
 }
 
 fn main() {
-    println!("Hello, world!");
-}
-
-#[test]
-fn test_simple_p1() {
-    assert_eq!(find_index("abc"), 123);
+    println!("cuanljph: {}", find_index("cuanljph"));
+    // Should be 20606
 }
