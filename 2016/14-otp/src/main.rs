@@ -3,7 +3,7 @@ extern crate crypto;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
 
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 fn hash(input: &str) -> Vec<char> {
     let mut hasher = Md5::new();
@@ -20,7 +20,7 @@ fn hash(input: &str) -> Vec<char> {
 
 fn find_index(salt: &str) -> usize {
     let mut index = 0;
-    let mut keys: Vec<(usize, String, usize, String)> = Vec::new();
+    let mut key_set: HashSet<usize> = HashSet::new();
     let mut queue: VecDeque<(usize, char, String)> = VecDeque::new();
 
     loop {
@@ -36,7 +36,7 @@ fn find_index(salt: &str) -> usize {
         queue
             .iter()
             .filter(|(i, _, _)| index - i <= 1000 && index > *i)
-            .for_each(|(i, n, s)| {
+            .for_each(|(i, n, _)| {
                 for j in 4..nib.len() {
                     if nib[j] == *n
                         && nib[j] == nib[j - 1]
@@ -44,15 +44,15 @@ fn find_index(salt: &str) -> usize {
                         && nib[j] == nib[j - 3]
                         && nib[j] == nib[j - 4]
                     {
-                        keys.push((*i, nib.iter().collect(), index, s.clone()));
+                        key_set.insert(*i);
                         break;
                     }
                 }
             });
-        if keys.len() >= 64 {
+        if key_set.len() >= 64 {
+            let mut keys = key_set.into_iter().collect::<Vec<usize>>();
             keys.sort_unstable();
-            keys.iter().for_each(|(k, s, kn, sn)| println!("{}:{}, {}:{}", k, s, kn, sn));
-            return keys[63 + 5].0; // There are 5 false finds...
+            return keys[63];
         }
 
         index += 1;
