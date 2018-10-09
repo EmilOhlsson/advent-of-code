@@ -15,7 +15,7 @@ fn find_time(ss: &Vec<(usize, usize)>) -> usize {
 }
 
 fn main() {
-    let states = vec![(13, 11), (5, 0), (17, 11), (3, 0), (7, 2), (19, 17)];
+    let states = vec![(13, 11), (5, 0), (17, 11), (3, 0), (7, 2), (19, 17), (11, 0)];
     println!("{}", find_time(&states));
 }
 
