@@ -32,7 +32,7 @@ fn solve(bss: &str, len: usize) -> String {
 }
 
 fn main() {
-    println!("{}", solve("11100010111110100", 272));
+    println!("{}", solve("11100010111110100", 35651584));
 }
 
 #[test]
