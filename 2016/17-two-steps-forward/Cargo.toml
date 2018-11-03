@@ -1,0 +1,8 @@
+[package]
+name = "two-steps-forward"
+version = "0.1.0"
+authors = ["Emil Ohlsson <emil@kottland.net>"]
+
+[dependencies]
+rust-crypto = "0.2.36"
+coding-challenge-utils = { git = "https://github.com/EmilOhlsson/coding-challenge-utils.git" }
