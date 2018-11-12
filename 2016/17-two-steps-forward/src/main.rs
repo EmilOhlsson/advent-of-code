@@ -73,15 +73,23 @@ fn hash(s: &str) -> Vec<bool> {
 fn solve_p1(key: &str) -> Option<String> {
     let start = Room::new(coord::Cartesian::new(0, 0), key.to_owned());
     let goal = Room::new(coord::Cartesian::new(3, 3), String::new());
-    if let Some(path) = graph::search::<Room>(start, goal) {
+    if let Some(path) = graph::astar_search::<Room>(start, goal) {
         let mut p = path[0].path.to_string();
         return Some(p.split_off(key.len()));
     }
     None
 }
 
+fn solve_p2(key: &str) -> Option<usize> {
+    let start = Room::new(coord::Cartesian::new(0, 0), key.to_owned());
+    let goal = Room::new(coord::Cartesian::new(3, 3), String::new());
+    let paths = graph::bfs_search_all::<Room>(start, goal);
+    paths.iter().max_by_key(|v| v.len()).map(|v| v.len() - 1)
+}
+
 fn main() {
     println!("{}", solve_p1("mmsxrhfx").unwrap());
+    println!("{}", solve_p2("mmsxrhfx").unwrap());
 }
 
 // Test section ////////////////////////////////////////////////////////////////
@@ -127,4 +135,7 @@ fn test_simple() {
         solve_p1("ulqzkmiv"),
         Some("DRURDRUDDLLDLUURRDULRLDUUDDDRR".to_string())
     );
+    assert_eq!(solve_p2("ihgpwlah"), Some(370));
+    assert_eq!(solve_p2("kglvqrro"), Some(492));
+    assert_eq!(solve_p2("ulqzkmiv"), Some(830));
 }
