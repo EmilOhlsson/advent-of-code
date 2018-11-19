@@ -1,0 +1,6 @@
+[package]
+name = "like-a-rogue"
+version = "0.1.0"
+authors = ["Emil Ohlsson <emil@kottland.net>"]
+
+[dependencies]
