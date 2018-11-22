@@ -1,0 +1,7 @@
+[package]
+name = "scrambled-letters"
+version = "0.1.0"
+authors = ["Emil Ohlsson <emil@kottland.net>"]
+
+[dependencies]
+regex = "1"
