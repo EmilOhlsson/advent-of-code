@@ -1,0 +1,8 @@
+[package]
+name = "repose-record"
+version = "0.1.0"
+authors = ["Emil Ohlsson <emil@kottland.net>"]
+
+[dependencies]
+regex = "1"
+chrono = "^0.4"
