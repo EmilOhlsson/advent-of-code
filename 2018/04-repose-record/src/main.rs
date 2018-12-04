@@ -11,7 +11,7 @@ struct Guard {
     sleepings: Vec<(u32, u32)>,
 }
 
-fn solve(input: &str) -> usize {
+fn solve(input: &str) -> (usize, usize) {
     let re_begin = Regex::new(r"\[\d+-\d+-\d+ \d+:(\d\d)\] Guard #(\d+) begins shift").unwrap();
     let re_falls_asleep = Regex::new(r"\[\d+-\d+-\d+ \d+:(\d\d)\] falls asleep").unwrap();
     let re_wake_up = Regex::new(r"\[\d+-\d+-\d+ \d+:(\d\d)\] wakes up").unwrap();
@@ -65,10 +65,30 @@ fn solve(input: &str) -> usize {
                     acc + (m >= start && m < start + length) as u32
                 })
         }).unwrap();
-    sleepiest.0 * minute as usize
+
+    let mut min = 0;
+    let mut id = 0;
+    let mut best_slept = 0;
+    for (i, g) in &guards {
+        for m in 0..60 {
+            let times_slept = g.sleepings.iter().fold(0, |acc, &(start, length)| {
+                acc + (m >= start && m < start + length) as u32
+            });
+            if times_slept > best_slept {
+                best_slept = times_slept;
+                id = *i;
+                min = m as usize;
+            }
+        }
+
+    }
+
+    (sleepiest.0 * minute as usize, min * id)
 }
 
 fn main() {
     let input = include_str!("input.txt");
-    println!("{}", solve(input));
+    let solution = solve(input);
+    println!("{}", solution.0);
+    println!("{}", solution.1);
 }
