@@ -4,7 +4,7 @@ use chs::coord::Cartesian;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-fn solve(input: &str) -> usize {
+fn solve(input: &str, max_dist: usize) -> (usize, usize) {
     let mut coords = input
         .lines()
         .map(|l| (l.parse::<Cartesian>().unwrap(), 0))
@@ -87,21 +87,40 @@ fn solve(input: &str) -> usize {
         }
     }
 
-    coords
-        .iter()
-        .filter_map(|(c, size)| {
-            if infinite.contains(c) {
-                None
-            } else {
-                Some(*size)
+    let mut safe_zone = 0;
+    for y in y_min..=y_max {
+        for x in x_min..=x_max {
+            let t = Cartesian::new(x, y);
+            if coords
+                .keys()
+                .map(|c| c.manhattan_distance(&t))
+                .sum::<usize>()
+                < max_dist
+            {
+                safe_zone += 1;
             }
-        }).max()
-        .unwrap()
+        }
+    }
+
+    (
+        coords
+            .iter()
+            .filter_map(|(c, size)| {
+                if infinite.contains(c) {
+                    None
+                } else {
+                    Some(*size)
+                }
+            }).max()
+            .unwrap(),
+        safe_zone,
+    )
 }
 
 fn main() {
     let input = include_str!("input");
-    println!("{}", solve(input));
+    let solution = solve(input, 10000);
+    println!("{}, {}", solution.0, solution.1);
 }
 
 #[test]
@@ -112,5 +131,5 @@ fn test() {
 3, 4
 5, 5
 8, 9";
-    assert_eq!(solve(input), 17);
+    assert_eq!(solve(input, 32), (17, 16));
 }
