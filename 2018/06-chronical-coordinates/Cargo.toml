@@ -1,0 +1,8 @@
+[package]
+name = "chronical-coordinates"
+version = "0.1.0"
+authors = ["Emil Ohlsson <emil@kottland.net>"]
+
+[dependencies]
+coding-challenge-utils = {path = '../../../coding-challenge-utils/'}
+
