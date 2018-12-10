@@ -1,0 +1,10 @@
+[package]
+name = "the-stars-align"
+version = "0.1.0"
+authors = ["Emil Ohlsson <emil@kottland.net>"]
+edition = "2018"
+
+[dependencies]
+regex = "1"
+coding-challenge-utils = {git = "https://github.com/EmilOhlsson/coding-challenge-utils"}
+itertools = " 0.8.0"
