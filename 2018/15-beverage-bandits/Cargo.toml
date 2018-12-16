@@ -1,0 +1,9 @@
+[package]
+name = "beverage-bandits"
+version = "0.1.0"
+authors = ["kotte"]
+edition = "2018"
+
+[dependencies]
+#coding-challenge-utils = {git = "https://github.com/EmilOhlsson/coding-challenge-utils"}
+coding-challenge-utils = {path = "../../../coding-challenge-utils"}
