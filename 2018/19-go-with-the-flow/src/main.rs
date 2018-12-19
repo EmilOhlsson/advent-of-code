@@ -121,13 +121,13 @@ fn solve_p1(input: &str, ip_reg: usize) -> usize {
         })
         .collect();
 
-    let mut registers = vec![1;6];
-    registers[ip_reg] = 0;
+    let mut registers = vec![0; 6];
+    registers[0] = 1;
 
     loop {
         let ip = registers[ip_reg];
-        if let Some ((inst, a, b, c)) = program.get(ip) {
-            println!("ip={} {:?} -- {} {} {} {}", ip, registers, inst, a, b, c);
+        if let Some((inst, a, b, c)) = program.get(ip) {
+            //println!("ip={} {:?} -- {} {} {} {}", ip, registers, inst, a, b, c);
             let instr = isa.get(inst).unwrap();
             instr(&mut registers, *a, *b, *c).unwrap();
         } else {
