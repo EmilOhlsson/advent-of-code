@@ -1,0 +1,31 @@
+    seti 123 0 4        # r4 = 123
+    bani 4 456 4        # r4 &= 456
+    eqri 4 72 4         # r4 = r4 == 72
+    addr 4 2 2          # pc = pc(3) + r4((123 & 456) == 72) -- JUMP S0
+    seti 0 0 2
+S0: seti 0 7 4          # r4 = 0
+    bori 4 65536 3      # r3(65536) = r4 |  65536
+L3: seti 10283511 1 4   # r4 = 10283511
+    bani 3 255 1        # r1(0) = r3 & 255 
+    addr 4 1 4          # r4(10283511) = r4 + r1
+    bani 4 16777215 4   # r4(10283511) = r4(10283511) & 16777215
+    muli 4 65899 4      # r4(677673091389) = r4 * 65899
+    bani 4 16777215 4   # r4(7782717) = r4 & 16777215
+    gtir 256 3 1        # r1 = 256 > r3(65536)
+    addr 1 2 2          # pc = r1(0) + pc
+    addi 2 1 2          # pc = pc + 1 -- JUMP L2 if 256 > r3
+    seti 27 8 2         # pc = 27  -- GOTO L4
+L2: seti 0 1 1          # r1 = 0
+    addi 1 1 5          # r5(3) = r1(0) + 1
+    muli 5 256 5        # r5(768) = r5 * 256
+    gtrr 5 3 5          # r5(0) = r5(256) > r3(65536)
+    addr 5 2 2          # pc = r5(0) + pc
+    addi 2 1 2          # pc = pc + 1  -- JUMP L1
+    seti 25 3 2         # pc = 25 -- 
+S1: addi 1 1 1          # r1 = r1 + 1
+    seti 17 0 2         # pc = 17 -- GOTO L2
+L4: setr 1 4 3          # r3 = r1
+    seti 7 6 2          # pc = 7 -- GOTO L3
+    eqrr 4 0 1          # r1 = r4 == r0 (Check input!)
+    addr 1 2 2          # pc = r1 + r2 (Jump out)
+    seti 5 2 2          # r2 = r5
