@@ -93,7 +93,7 @@ fn dijksra(maze: &Maze) -> HashMap<C2d, usize> {
     distances
 }
 
-fn solve(input: &str) -> usize {
+fn solve(input: &str) -> (usize, usize) {
     let mut maze: Maze = HashMap::new();
     maze.insert(C2d::new(0, 0), Sq::Room);
     let (xr, yr) = build(&mut maze, input, 0, C2d::new(0, 0));
@@ -131,12 +131,12 @@ fn solve(input: &str) -> usize {
     }
     println!();
 
-    *dijksra(&maze).values().max().unwrap()
+    (*dj.values().max().unwrap(), dj.values().filter(|v| *v >= &1000).count())
 }
 
 fn main() {
     let input = include_str!("input.txt").trim();
-    println!("{}", solve(input));
+    println!("{:?}", solve(input));
 }
 
 #[test]
