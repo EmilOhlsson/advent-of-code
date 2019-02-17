@@ -33,7 +33,7 @@ enum Team {
     Infection,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Group {
     id: usize,
     team: Team,
@@ -72,13 +72,16 @@ impl Group {
     }
 }
 
+#[derive(Debug)]
 enum Victory {
     None,
+    Draw,
     ImmuneSystem(i32),
     Infection(i32),
 }
 
 fn fight(groups: &mut HashMap<usize, Group>) -> Victory {
+    let units_before_fight = groups.values().map(|g| g.units).sum::<i32>();
     let (immune_system, infection): (Vec<usize>, Vec<usize>) = groups
         .keys()
         .partition(|g| groups[&g].team == Team::ImmuneSystem);
@@ -88,7 +91,7 @@ fn fight(groups: &mut HashMap<usize, Group>) -> Victory {
     if immune_system.len() == 0 {
         return Victory::Infection(infection.iter().map(|id| groups[id].units).sum());
     } else if infection.len() == 0 {
-        return Victory::ImmuneSystem(infection.iter().map(|id| groups[id].units).sum());
+        return Victory::ImmuneSystem(immune_system.iter().map(|id| groups[id].units).sum());
     }
 
     // Create a list of of targeters, sort by maximum dealable damage
@@ -126,14 +129,6 @@ fn fight(groups: &mut HashMap<usize, Group>) -> Victory {
         }
     }
 
-    //println!(
-    //    "targeting order: {:?}, targets {:?}",
-    //    targeteers,
-    //    attackers.iter().filter_map(|id| targets.get(id)).collect::<Vec<_>>()
-    //);
-
-    //println!("attacking order: {:?}", attackers);
-
     // Attack
     for attacker_id in attackers {
         if groups[&attacker_id].units <= 0 {
@@ -151,10 +146,15 @@ fn fight(groups: &mut HashMap<usize, Group>) -> Victory {
 
     // Discard all dead groups
     groups.retain(|_, g| g.units > 0);
-    Victory::None
+    let units_after_fight = groups.values().map(|g| g.units).sum::<i32>();
+    if units_after_fight == units_before_fight {
+        Victory::Draw
+    } else {
+        Victory::None
+    }
 }
 
-fn solve(input: &str) -> i32 {
+fn solve(input: &str, search: bool) -> Victory {
     let mut groups: HashMap<usize, Group> = HashMap::new();
     let mut current_team = Team::ImmuneSystem;
     let mut id = 0;
@@ -207,18 +207,37 @@ fn solve(input: &str) -> i32 {
         }
     }
 
-    loop {
-        match fight(&mut groups) {
-            Victory::None => (),
-            Victory::ImmuneSystem(res) => return res,
-            Victory::Infection(res) => return res,
+    for boost in 0.. {
+        let mut boosted_groups = groups.clone();
+        for (_, group) in &mut boosted_groups {
+            if group.team == Team::ImmuneSystem {
+                group.damage += boost;
+            }
+        }
+        loop {
+            match fight(&mut boosted_groups) {
+                Victory::None => (),
+                Victory::ImmuneSystem(res) => {
+                    return Victory::ImmuneSystem(res);
+                }
+                Victory::Infection(res) => {
+                    if !search {
+                        return Victory::Infection(res);
+                    } else {
+                        break;
+                    }
+                }
+                Victory::Draw => break,
+            }
         }
     }
+    panic!("Broken");
 }
 
 fn main() {
     let input = include_str!("input.txt");
-    println!("{}", solve(input));
+    println!("{:?}", solve(input, false));
+    println!("{:?}", solve(input, true));
 }
 
 #[test]
