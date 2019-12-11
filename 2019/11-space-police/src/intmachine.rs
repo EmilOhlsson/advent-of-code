@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub enum IOState {
     Output(i64),
     Input,
@@ -10,38 +12,78 @@ pub struct Intmachine {
     program: Vec<i64>,
     trace: Vec<usize>,
     heatmap: Vec<usize>,
+    length: usize,
     ip: usize, // Instruction pointer
     rb: i64,   // Relative base
     debug: bool,
 }
 
+const ADD: i64 = 1;
+const MUL: i64 = 2;
+const READ: i64 = 3;
+const WRITE: i64 = 4;
+const JNZ: i64 = 5;
+const JZ: i64 = 6;
+const LT: i64 = 7;
+const EQ: i64 = 8;
+const SETRB: i64 = 9;
+const EXIT: i64 = 99;
+
+enum Mode {
+    Pos,
+    Imm,
+    Rb,
+}
+
+impl std::fmt::Display for Mode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Mode::Pos => "o",
+                Mode::Imm => "#",
+                Mode::Rb => "r",
+            }
+        )
+    }
+}
+
 impl Intmachine {
-    /// Read an operand parameter
-    fn get(&self, pos: usize) -> i64 {
-        let mut mode = self.program[self.ip] / 100;
+    fn getm(&self, ip: usize, pos: usize) -> Mode {
+        let mut mode = self.program[ip] / 100;
         for _ in 1..pos {
             mode /= 10;
         }
-        let opval = self.program[self.ip + pos];
         match mode % 10 {
-            0 => self.program[opval as usize],             // Positional mode
-            1 => opval,                                    // Immediate mode
-            2 => self.program[(opval + self.rb) as usize], // Relative mode
-            _ => panic!("Invalid mode :("),
+            0 => Mode::Pos,
+            1 => Mode::Imm,
+            2 => Mode::Rb,
+            m => panic!("Invalid mode: {}", m),
         }
+    }
+
+    fn getv(&self, ip: usize, pos: usize) -> i64 {
+        let opval = self.program[ip + pos];
+        match self.getm(ip, pos) {
+            Mode::Pos => self.program[opval as usize],
+            Mode::Imm => opval,
+            Mode::Rb => self.program[(opval + self.rb) as usize],
+        }
+    }
+
+    /// Read an operand parameter
+    fn get(&self, pos: usize) -> i64 {
+        self.getv(self.ip, pos)
     }
 
     /// Set an operand parameter
     fn set(&mut self, pos: usize, val: i64) {
-        let mut mode = self.program[self.ip] / 100;
-        for _ in 1..pos {
-            mode /= 10;
-        }
         let opval = self.program[self.ip + pos];
-        match mode % 10 {
-            0 => self.program[opval as usize] = val, // Positional mode
-            2 => self.program[(opval + self.rb) as usize] = val, // Relative mode
-            _ => panic!("Invalid mode :("),
+        match self.getm(self.ip, pos) {
+            Mode::Pos => self.program[opval as usize] = val, // Positional mode
+            Mode::Imm => panic!("Write to immediate parameter"),
+            Mode::Rb => self.program[(opval + self.rb) as usize] = val, // Relative mode
         }
     }
 
@@ -60,6 +102,7 @@ impl Intmachine {
             program,
             trace: Vec::new(),
             heatmap: vec![0; program_length],
+            length: program_length,
             ip: 0,
             rb: 0,
             debug: false,
@@ -76,80 +119,70 @@ impl Intmachine {
         let mut ii = input.into_iter();
         loop {
             let inp = *ii.next().unwrap_or(&0);
-            if let IOState::Done = self.run_to_event(inp) {
+            if let IOState::Done = self.run_to_event(Some(inp)) {
                 return self.output.clone();
             }
         }
     }
 
     /// Run machine until IO or exit
-    pub fn run_to_event(&mut self, input: i64) -> IOState {
-        let mut consumed: bool = false;
+    pub fn run_to_event(&mut self, input: Option<i64>) -> IOState {
+        let mut consumed: bool = input.is_none();
         loop {
             if self.debug {
                 self.heatmap[self.ip] += 1;
                 self.trace.push(self.ip);
             }
             match self.program[self.ip] % 100 {
-                1 => {
-                    // Add
+                ADD => {
                     self.set(3, self.get(1) + self.get(2));
                     self.ip += 4;
                 }
-                2 => {
-                    // Mul
+                MUL => {
                     self.set(3, self.get(1) * self.get(2));
                     self.ip += 4;
                 }
-                3 => {
-                    // Read
+                READ => {
                     if consumed {
                         return IOState::Input;
                     }
                     consumed = true;
-                    self.set(1, input);
+                    self.set(1, input.unwrap());
                     self.ip += 2;
                 }
-                4 => {
-                    // Write
+                WRITE => {
                     let output = self.get(1);
                     self.output.push(output);
                     self.ip += 2;
                     return IOState::Output(output);
                 }
-                5 => {
-                    // Jump if true
+                JNZ => {
                     if self.get(1) != 0 {
                         self.ip = self.get(2) as usize;
                     } else {
                         self.ip += 3;
                     }
                 }
-                6 => {
-                    // Jump if false
+                JZ => {
                     if self.get(1) == 0 {
                         self.ip = self.get(2) as usize;
                     } else {
                         self.ip += 3;
                     }
                 }
-                7 => {
-                    // Less than
+                LT => {
                     self.set(3, (self.get(1) < self.get(2)) as i64);
                     self.ip += 4;
                 }
-                8 => {
-                    // Equals
+                EQ => {
                     self.set(3, (self.get(1) == self.get(2)) as i64);
                     self.ip += 4;
                 }
-                9 => {
-                    // Set relative base
+                SETRB => {
                     self.rb += self.get(1);
                     self.ip += 2;
                 }
-                99 => {
-                    // Exit
+                EXIT => {
                     return IOState::Done;
                 }
                 i => panic!("Unknown instruction: {}", i),
@@ -163,19 +196,106 @@ impl Intmachine {
 
     fn instruction_name(&self, instruction_pointer: usize) -> String {
         match self.program[instruction_pointer] % 100 {
-            1 => "ADD",
-            2 => "MUL",
-            3 => "READ",
-            4 => "WRITE",
-            5 => "JNZ",
-            6 => "JZ",
-            7 => "LT",
-            8 => "EQ",
-            9 => "SRB",
-            99 => "EXIT",
+            ADD => "ADD",
+            MUL => "MUL",
+            READ => "READ",
+            WRITE => "WRITE",
+            JNZ => "JNZ",
+            JZ => "JZ",
+            LT => "LT",
+            EQ => "EQ",
+            SETRB => "SETRB",
+            EXIT => "EXIT",
             _ => "(unknown/invalid)",
         }
         .to_string()
+    }
+
+    fn getp(&self, ip: usize, pos: usize) -> String {
+        format!("{}{}", self.getm(ip, pos), self.program[ip + pos])
+    }
+
+    fn disassemble_addr(&self, ip: usize) -> (usize, String, Option<usize>) {
+        match self.program[ip] % 100 {
+            ADD => (
+                4,
+                format!(
+                    "ADD {} + {} -> {}",
+                    self.getp(ip, 1),
+                    self.getp(ip, 2),
+                    self.getp(ip, 3)
+                ),
+                None,
+            ),
+            MUL => (
+                4,
+                format!(
+                    "MUL {} * {} -> {}",
+                    self.getp(ip, 1),
+                    self.getp(ip, 2),
+                    self.getp(ip, 3)
+                ),
+                None,
+            ),
+            READ => (2, format!("READ -> {}", self.getp(ip, 1),), None),
+            WRITE => (2, format!("WRITE {}", self.getp(ip, 1),), None),
+            JNZ => (
+                3,
+                format!("JNZ {} to {}", self.getp(ip, 1), self.getp(ip, 2)),
+                Some(self.getv(ip, 2) as usize),
+            ),
+            JZ => (
+                3,
+                format!("JZ {} to {}", self.getp(ip, 1), self.getp(ip, 2)),
+                Some(self.getv(ip, 2) as usize),
+            ),
+            LT => (
+                4,
+                format!(
+                    "LT {} < {} -> {}",
+                    self.getp(ip, 1),
+                    self.getp(ip, 2),
+                    self.getp(ip, 3)
+                ),
+                None,
+            ),
+            EQ => (
+                4,
+                format!(
+                    "EQ {} == {} -> {}",
+                    self.getp(ip, 1),
+                    self.getp(ip, 2),
+                    self.getp(ip, 3)
+                ),
+                None,
+            ),
+            SETRB => (2, format!("SETRB {}", self.getp(ip, 1)), None),
+            EXIT => (1, "EXIT".to_string(), None),
+            _ => (1, format!("{}", self.program[ip]), None),
+        }
+    }
+
+    /// Attemp to create something readble-ish
+    pub fn disassemble(&self) {
+        let mut ip = 0;
+        let mut ips = Vec::new();
+        let mut dests = HashMap::new();
+        let mut instructions = HashMap::new();
+        while ip < self.length {
+            let (size, rep, jmp) = self.disassemble_addr(ip);
+            ips.push(ip);
+            instructions.insert(ip, rep);
+            if let Some(dst) = jmp {
+                dests.insert(dst, ip);
+            }
+            ip += size;
+        }
+        for i in &ips {
+            if let Some(from) = dests.get(i) {
+                println!("From {}:", from);
+            }
+            println!("  {} -- {}", i, instructions[i]);
+        }
     }
 
     pub fn dump_heatmap(&self) {

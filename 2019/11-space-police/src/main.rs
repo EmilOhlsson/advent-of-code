@@ -1,11 +1,14 @@
 pub mod intmachine;
 
-use std::collections::HashMap;
 use intmachine::{IOState, Intmachine};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy)]
 enum Dir {
-    Up, Left, Down, Right
+    Up,
+    Left,
+    Down,
+    Right,
 }
 
 fn left(dir: Dir) -> Dir {
@@ -46,9 +49,9 @@ fn solve(input: &str) -> usize {
     let mut signal = 0;
     let mut color = true;
     let mut hull: HashMap<(i32, i32), i64> = HashMap::new();
-    
+
     loop {
-        match machine.run_to_event(signal) {
+        match machine.run_to_event(Some(signal)) {
             IOState::Input => (),
             IOState::Done => {
                 return hull.keys().count();
@@ -72,14 +75,37 @@ fn solve(input: &str) -> usize {
 }
 
 fn print_hull(hull: &HashMap<(i32, i32), i64>) {
-    let min_x = hull.iter().filter_map(|(p, c)| if *c != 0 { Some(p.0) } else { None }).min().unwrap();
-    let max_x = hull.iter().filter_map(|(p, c)| if *c != 0 { Some(p.0) } else { None }).max().unwrap();
-    let min_y = hull.iter().filter_map(|(p, c)| if *c != 0 { Some(p.1) } else { None }).min().unwrap();
-    let max_y = hull.iter().filter_map(|(p, c)| if *c != 0 { Some(p.1) } else { None }).max().unwrap();
+    let min_x = hull
+        .iter()
+        .filter_map(|(p, c)| if *c != 0 { Some(p.0) } else { None })
+        .min()
+        .unwrap();
+    let max_x = hull
+        .iter()
+        .filter_map(|(p, c)| if *c != 0 { Some(p.0) } else { None })
+        .max()
+        .unwrap();
+    let min_y = hull
+        .iter()
+        .filter_map(|(p, c)| if *c != 0 { Some(p.1) } else { None })
+        .min()
+        .unwrap();
+    let max_y = hull
+        .iter()
+        .filter_map(|(p, c)| if *c != 0 { Some(p.1) } else { None })
+        .max()
+        .unwrap();
 
     for y in (min_y..=max_y).rev() {
         for x in min_x..=max_x {
-            print!("{}", if hull.get(&(x, y)).unwrap() != &0 { '#' } else { ' ' });
+            print!(
+                "{}",
+                if hull.get(&(x, y)).unwrap() != &0 {
+                    '#'
+                } else {
+                    ' '
+                }
+            );
         }
         println!();
     }
@@ -93,9 +119,9 @@ fn solve_p2(input: &str) {
     let mut signal = 1;
     let mut color = true;
     let mut hull: HashMap<(i32, i32), i64> = HashMap::new();
-    
+
     loop {
-        match machine.run_to_event(signal) {
+        match machine.run_to_event(Some(signal)) {
             IOState::Input => (),
             IOState::Done => {
                 print_hull(&hull);
