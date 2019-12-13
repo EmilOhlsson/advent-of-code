@@ -55,6 +55,7 @@ impl Intmachine {
         for _ in 1..pos {
             mode /= 10;
         }
+
         match mode % 10 {
             0 => Mode::Pos,
             1 => Mode::Imm,
@@ -132,66 +133,81 @@ impl Intmachine {
 
     /// Run machine until IO or exit
     pub fn run_to_event(&mut self, input: Option<i64>) -> IOState {
-        let mut consumed: bool = input.is_none();
         loop {
-            if self.debug {
-                self.heatmap[self.ip] += 1;
-                self.trace.push(self.ip);
+            if let Some(event) = self.run_instruction(input) {
+                match event {
+                    IOState::Done => return IOState::Done,
+                    IOState::Input => return IOState::Input,
+                    IOState::Output(v) => return IOState::Output(v),
+                }
             }
-            match self.program[self.ip] % 100 {
-                ADD => {
-                    self.set(3, self.get(1) + self.get(2));
-                    self.ip += 4;
-                }
-                MUL => {
-                    self.set(3, self.get(1) * self.get(2));
-                    self.ip += 4;
-                }
-                READ => {
-                    if consumed {
-                        return IOState::Input;
-                    }
-                    consumed = true;
-                    self.set(1, input.unwrap());
-                    self.ip += 2;
-                }
-                WRITE => {
-                    let output = self.get(1);
-                    self.output.push(output);
-                    self.ip += 2;
-                    return IOState::Output(output);
-                }
-                JNZ => {
-                    if self.get(1) != 0 {
-                        self.ip = self.get(2) as usize;
-                    } else {
-                        self.ip += 3;
-                    }
-                }
-                JZ => {
-                    if self.get(1) == 0 {
-                        self.ip = self.get(2) as usize;
-                    } else {
-                        self.ip += 3;
-                    }
-                }
-                LT => {
-                    self.set(3, (self.get(1) < self.get(2)) as i64);
-                    self.ip += 4;
-                }
-                EQ => {
-                    self.set(3, (self.get(1) == self.get(2)) as i64);
-                    self.ip += 4;
-                }
-                SETRB => {
-                    self.rb += self.get(1);
-                    self.ip += 2;
-                }
-                EXIT => {
-                    return IOState::Done;
-                }
-                i => panic!("Unknown instruction: {}", i),
+        }
+    }
+
+    fn run_instruction(&mut self, input: Option<i64>) -> Option<IOState> {
+        if self.debug {
+            self.heatmap[self.ip] += 1;
+            self.trace.push(self.ip);
+        }
+
+        match self.program[self.ip] % 100 {
+            ADD => {
+                self.set(3, self.get(1) + self.get(2));
+                self.ip += 4;
+                return None;
             }
+            MUL => {
+                self.set(3, self.get(1) * self.get(2));
+                self.ip += 4;
+                return None;
+            }
+            READ => {
+                self.set(1, input.unwrap());
+                self.ip += 2;
+                return Some(IOState::Input);
+            }
+            WRITE => {
+                let output = self.get(1);
+                self.output.push(output);
+                self.ip += 2;
+                return Some(IOState::Output(output));
+            }
+            JNZ => {
+                if self.get(1) != 0 {
+                    self.ip = self.get(2) as usize;
+                } else {
+                    self.ip += 3;
+                }
+
+                return None;
+            }
+            JZ => {
+                if self.get(1) == 0 {
+                    self.ip = self.get(2) as usize;
+                } else {
+                    self.ip += 3;
+                }
+                return None;
+            }
+            LT => {
+                self.set(3, (self.get(1) < self.get(2)) as i64);
+                self.ip += 4;
+                return None;
+            }
+            EQ => {
+                self.set(3, (self.get(1) == self.get(2)) as i64);
+                self.ip += 4;
+                return None;
+            }
+            SETRB => {
+                self.rb += self.get(1);
+                self.ip += 2;
+                return None;
+            }
+            EXIT => {
+                return Some(IOState::Done);
+            }
+            i => panic!("Unknown instruction: {}", i),
         }
     }
 
@@ -281,20 +297,25 @@ impl Intmachine {
     }
 
     /// Attemp to create something readble-ish
-    pub fn disassemble(&self) {
+    pub fn disassemble(&self, use_heatmap: bool) {
         let mut ip = 0;
         let mut ips = Vec::new();
         let mut dests = HashMap::new();
         let mut instructions = HashMap::new();
         while ip < self.length {
-            let (size, rep, jmp) = self.disassemble_addr(ip);
-            ips.push(ip);
-            instructions.insert(ip, rep);
-            if let Some(dst) = jmp {
-                dests.insert(dst, ip);
+            if (use_heatmap && self.heatmap[ip] > 0) || !use_heatmap {
+                let (size, rep, jmp) = self.disassemble_addr(ip);
+                ips.push(ip);
+                instructions.insert(ip, rep);
+                if let Some(dst) = jmp {
+                    dests.insert(dst, ip);
+                }
+                ip += size;
+            } else {
+                ip += 1;
             }
-            ip += size;
         }
+
         for i in &ips {
             if let Some(from) = dests.get(i) {
                 println!("From {}:", from);
