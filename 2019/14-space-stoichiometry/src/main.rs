@@ -1,16 +1,16 @@
 use std::cmp::max;
 
 use std::collections::HashMap;
-type Recipie = HashMap<String, (i64, Vec<(i64, String)>)>;
+type Recipe = HashMap<String, (i64, Vec<(i64, String)>)>;
 type Stockpile = HashMap<String, i64>;
 
 fn get_ore_amount(
-    reciepie: &Recipie,
+    recipe: &Recipe,
     stockpile: &mut Stockpile,
     ingredient: &str,
     amount: i64,
 ) -> i64 {
-    let (produced, components) = reciepie.get(ingredient).unwrap();
+    let (produced, components) = recipe.get(ingredient).unwrap();
 
     // Check how much is actually neeeded
     let available = stockpile.entry(ingredient.to_string()).or_insert(0);
@@ -26,14 +26,14 @@ fn get_ore_amount(
         sum += if component.1 == "ORE" {
             component.0 * multiple
         } else {
-            get_ore_amount(reciepie, stockpile, &component.1, component.0 * multiple)
+            get_ore_amount(recipe, stockpile, &component.1, component.0 * multiple)
         };
     }
     sum
 }
 
 fn solve(input: &str) -> (i64, i64) {
-    let mut recipie = Recipie::new();
+    let mut recipe = Recipe::new();
 
     // Parse input
     for line in input.lines() {
@@ -44,7 +44,7 @@ fn solve(input: &str) -> (i64, i64) {
         let out_quant = out_it.next().unwrap().parse::<i64>().unwrap();
         let out_name = out_it.next().unwrap().to_string();
 
-        recipie.insert(
+        recipe.insert(
             out_name,
             (
                 out_quant,
@@ -60,7 +60,7 @@ fn solve(input: &str) -> (i64, i64) {
             ),
         );
     }
-    let part1 = get_ore_amount(&recipie, &mut HashMap::new(), "FUEL", 1);
+    let part1 = get_ore_amount(&recipe, &mut HashMap::new(), "FUEL", 1);
 
     // Binary search for part two. Start by estimating a rough interval
     let trillion = 1_000_000_000_000i64;
@@ -69,7 +69,7 @@ fn solve(input: &str) -> (i64, i64) {
     let mut part2 = -1;
     while guess_low < guess_high {
         part2 = (guess_low + guess_high) / 2;
-        let actual = get_ore_amount(&recipie, &mut HashMap::new(), "FUEL", part2);
+        let actual = get_ore_amount(&recipe, &mut HashMap::new(), "FUEL", part2);
         if actual > trillion {
             guess_high = part2 - 1;
         } else {
