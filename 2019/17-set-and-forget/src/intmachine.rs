@@ -137,10 +137,16 @@ impl Intmachine {
     /// Run machine until exit instruction
     pub fn run<'a>(&mut self, input: impl IntoIterator<Item = &'a i64>) -> Vec<i64> {
         let mut ii = input.into_iter();
+        let mut inp = *ii.next().unwrap_or(&0);
         loop {
-            let inp = *ii.next().unwrap_or(&0);
-            if let IOState::Done = self.run_to_event(Some(inp)) {
-                return self.output.clone();
+            match self.run_to_event(Some(inp)) {
+                IOState::Input => {
+                    inp = *ii.next().unwrap_or(&0);
+                }
+                IOState::Done => {
+                    return self.output.clone();
+                }
+                IOState::Output(_) => (),
             }
         }
     }
@@ -192,6 +198,7 @@ impl Intmachine {
                 } else {
                     self.ip += 3;
                 }
+
                 None
             }
             JZ => {
