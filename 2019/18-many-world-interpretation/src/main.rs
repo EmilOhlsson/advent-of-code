@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::cmp::{max, min, Ordering};
 use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 
 type Pos = (i32, i32);
@@ -11,7 +11,7 @@ type DMap = HashMap<char, (u32, HashSet<char>)>;
 #[derive(Debug)]
 struct Labyrinth {
     maze: Maze,
-    start: Pos,
+    starts: Vec<Pos>,
     keys: HashMap<char, Pos>,
     doors: HashMap<Pos, char>,
 }
@@ -21,15 +21,15 @@ impl Labyrinth {
         let mut maze = HashSet::new();
         let mut keys = HashMap::new();
         let mut doors = HashMap::new();
+        let mut starts = Vec::new();
 
-        let mut pos = None;
         for (y, line) in input.lines().enumerate() {
             for (x, ch) in line.chars().enumerate() {
                 let p = (x as i32, y as i32);
 
                 match ch {
                     '@' => {
-                        pos = Some(p);
+                        starts.push(p);
                     }
                     key @ 'a'..='z' => {
                         keys.insert(key, p);
@@ -48,7 +48,7 @@ impl Labyrinth {
 
         Labyrinth {
             maze,
-            start: pos.unwrap(),
+            starts,
             keys,
             doors,
         }
@@ -102,25 +102,16 @@ impl Labyrinth {
     }
 }
 
+#[derive(Debug)]
 struct MazeSolver {
-    start_trace: DMap,
+    starts: Vec<(Pos, DMap)>,
     key_traces: HashMap<char, DMap>,
     keys_needed: usize,
     key_positions: HashMap<char, Pos>,
+    labyrinth: Labyrinth,
 }
 
-fn dfilt(
-    (key, (dist, keys_needed)): &(&char, &(u32, HashSet<char>)),
-    keyset: &HashSet<char>,
-) -> Option<(char, u32)> {
-    if !keyset.contains(key) && keys_needed.is_subset(keyset) {
-        Some((**key, *dist))
-    } else {
-        None
-    }
-}
-
-#[derive(Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 struct DNode<'a> {
     pos: Pos,
     dist: u32,
@@ -146,14 +137,25 @@ fn keyset_to_u32(keys: &HashSet<char>) -> u32 {
         .fold(0, |acc, v| v | acc)
 }
 
+fn dfilt(
+    (key, (dist, keys_needed)): &(&char, &(u32, HashSet<char>)),
+    keyset: &HashSet<char>,
+) -> Option<(char, u32)> {
+    if !keyset.contains(key) && keys_needed.is_subset(keyset) {
+        Some((**key, *dist))
+    } else {
+        None
+    }
+}
+
 impl MazeSolver {
-    fn solve(&self) -> u32 {
+    fn solve(&self, trace: &DMap, starting_keys: HashSet<char>) -> u32 {
         let mut queue = BinaryHeap::new();
         queue.push(DNode {
             pos: (0, 0),
             dist: 0,
-            dmap: &self.start_trace,
-            keys: HashSet::new(),
+            dmap: trace,
+            keys: starting_keys,
         });
         let mut seen = HashSet::new();
 
@@ -172,42 +174,96 @@ impl MazeSolver {
                         keys: keyset_new,
                     });
                 }
+            } else {
             }
         }
 
-        todo!()
+        panic!("Did not find a solution");
     }
 
     fn build(input: &str) -> MazeSolver {
         let labyrinth = Labyrinth::build(input);
-        let start_trace = labyrinth.bfs(labyrinth.start);
+        let starts = labyrinth
+            .starts
+            .iter()
+            .map(|&start| (start, labyrinth.bfs(start)))
+            .collect::<Vec<_>>();
         let key_traces = labyrinth
             .keys
             .iter()
             .map(|(k, p)| (*k, labyrinth.bfs(*p)))
             .collect::<HashMap<char, DMap>>();
         MazeSolver {
-            start_trace,
+            starts,
             key_traces,
             keys_needed: labyrinth.keys.keys().len(),
-            key_positions: labyrinth.keys,
+            key_positions: labyrinth.keys.clone(),
+            labyrinth,
         }
     }
 }
 
 fn solve(input: &str) -> u32 {
     let solver = MazeSolver::build(input);
-    solver.solve()
+    solver.solve(&solver.starts[0].1, HashSet::new())
+}
+
+fn in_range(v: i32, a: i32, b: i32) -> bool {
+    let lo = min(a, b);
+    let hi = max(a, b);
+    lo <= v && v <= hi
+}
+
+fn in_box(p: (i32, i32), a: (i32, i32), b: (i32, i32)) -> bool {
+    let in_x = in_range(p.0, a.0, b.0);
+    let in_y = in_range(p.1, a.1, b.1);
+    in_x && in_y
+}
+
+fn solve_v2(input: &str) -> u32 {
+    let solver = MazeSolver::build(input);
+    let mut sum = 0;
+    let inf = 1000;
+    let quadrants = [
+        ((0, 0), (solver.starts[0].0)),
+        ((solver.starts[1].0), (inf, 0)),
+        ((0, inf), (solver.starts[2].0)),
+        (solver.starts[3].0, (inf, inf)),
+    ];
+    for (i, (_, trace)) in solver.starts.iter().enumerate() {
+        // Build a keyset of all keys that aren't in the current quadrant
+        let keys = solver
+            .labyrinth
+            .keys
+            .iter()
+            .filter_map(|(key, key_pos)| {
+                if !in_box(*key_pos, quadrants[i].0, quadrants[i].1) {
+                    Some(*key)
+                } else {
+                    None
+                }
+            })
+            .collect::<HashSet<char>>();
+        sum += solver.solve(trace, keys)
+    }
+    sum
 }
 
 fn main() {
-    let input = include_str!("input");
-    println!("{}", solve(input));
+    let input_p1 = include_str!("input-p1");
+    let input_p2 = include_str!("input-p2");
+    println!("{}", solve(input_p1));
+    println!("{}", solve_v2(input_p2));
 }
 
 #[test]
 fn test_simple() {
     assert_eq!(solve(include_str!("input-simple")), 8);
+}
+
+#[test]
+fn test_simple2() {
+    assert_eq!(solve_v2(include_str!("input-simple-p2")), 8);
 }
 
 #[test]
