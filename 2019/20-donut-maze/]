@@ -1,0 +1,43 @@
+use std::collections::HashMap;
+enum Tile {
+    Open,
+    Wall,
+    Portal((usize, usize))
+}
+
+fn solve(input:&str) -> u32 {
+    let mut portals = HashMap::<(usize, usize), (usize, usize)>::new();
+    let mut start: Option<(usize, usize)> = None;
+    let mut goal: Option<(usize, usize)> = None;
+    let mut tmp = Has
+
+    let ir = input.lines().map(|line| line.chars().collect::<Vec<_>>()).collect::<Vec<_>>();
+    for r in 0..ir.len() {
+        for c in 0..ir[r].len() {
+            if ir[r][c].is_alphabetic() {
+                if ir[r+1][c].is_alphabetic() {
+                    let entry = portals.entry((ir[r][c],ir[r+1][c])).or_insert_with(Vec::new);
+                    entry.push((r,c));
+                } else if ir[r][c+1].is_alphabetic(){
+                    let entry = portals.entry((ir[r][c],ir[r][c+1])).or_insert_with(Vec::new);
+                    entry.push((r,c));
+
+                }
+            }
+        }
+    }
+    // Do a two step parsing. Start by building a two dimensional array of symbols
+    // Secondly, go through that array, and create portals by checking adjacent letters
+    // Finally, do a bfs traversal, and and add z dimension for every portal stepping
+    todo!()
+}
+
+fn main() {
+    let input = include_str!("input");
+    println!("{}", solve(input));
+}
+
+#[test]
+fn test_simple() {
+    assert_eq!(solve(include_str!("input-simple")), 23);
+}
