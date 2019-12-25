@@ -6,7 +6,8 @@ type Pos = (i32, i32);
 enum Tile {
     Open,
     Wall,
-    Portal(Pos),
+    InnerPortal(Pos),
+    OuterPortal(Pos),
 }
 
 #[derive(Debug)]
@@ -30,6 +31,7 @@ impl Maze {
         for r in 0..ir.len() {
             for c in 0..ir[r].len() {
                 if ir[r][c].is_alphabetic() {
+                    // if r || c == 0 || len, then outer, otherwise inner
                     // Create portal identifier, and point. Point should be next to an open space
                     let portal: Option<((char, char), Pos)> = if ir[r + 1][c].is_alphabetic() {
                         let key = (ir[r][c], ir[r + 1][c]);
@@ -56,8 +58,26 @@ impl Maze {
                             goal = Some(point);
                             maze.insert(point, Tile::Open);
                         } else if let Some(other) = half_portals.insert(key, point) {
-                            maze.insert(point, Tile::Portal(other));
-                            maze.insert(other, Tile::Portal(point));
+                            let portal_a = if point.0 == 3
+                                || point.0 == ir.len() as i32 - 4
+                                || point.1 == 3
+                                || point.1 == ir[r].len() as i32 - 4
+                            {
+                                Tile::OuterPortal(other)
+                            } else {
+                                Tile::InnerPortal(other)
+                            };
+                            let portal_b = if other.0 == 3
+                                || other.0 == ir.len() as i32 - 4
+                                || other.1 == 3
+                                || other.1 == ir[r].len() as i32 - 4
+                            {
+                                Tile::OuterPortal(point)
+                            } else {
+                                Tile::InnerPortal(point)
+                            };
+                            maze.insert(point, portal_a);
+                            maze.insert(other, portal_b);
                         }
                     }
                 } else {
@@ -94,7 +114,8 @@ impl Maze {
                         match tile {
                             Tile::Open => print!("."),
                             Tile::Wall => print!("#"),
-                            Tile::Portal(_) => print!("O"),
+                            Tile::InnerPortal(_) => print!("I"),
+                            Tile::OuterPortal(_) => print!("O"),
                         }
                     }
                 } else {
@@ -112,7 +133,29 @@ impl Maze {
             if let Some(p_t) = self.maze.get(&p) {
                 match p_t {
                     Tile::Open => neighbors.push((p, 1)),
-                    Tile::Portal(p_n) => neighbors.push((*p_n, 2)),
+                    Tile::InnerPortal(p_n) => neighbors.push((*p_n, 2)),
+                    Tile::OuterPortal(p_n) => neighbors.push((*p_n, 2)),
+                    Tile::Wall => (),
+                }
+            }
+        }
+        neighbors
+    }
+
+    fn adjacent_v2(&self, (x, y): Pos, z: i32) -> Vec<(Pos, u32, i32)> {
+        let mut neighbors = Vec::new();
+        for (dx, dy) in &[(-1, 0), (0, -1), (1, 0), (0, 1)] {
+            let p = (x + dx, y + dy);
+            if let Some(p_t) = self.maze.get(&p) {
+                match p_t {
+                    Tile::Open => neighbors.push((p, 1, z)),
+                    Tile::InnerPortal(p_n) => neighbors.push((*p_n, 2, z + 1)),
+                    Tile::OuterPortal(p_n) => {
+                        if z > 0 {
+                            neighbors.push((*p_n, 2, z - 1))
+                        } else {
+                        }
+                    }
                     Tile::Wall => (),
                 }
             }
@@ -137,27 +180,55 @@ impl Maze {
         }
         panic!("Didn't find solution");
     }
+
+    fn bfs_v2(&self) -> u32 {
+        let mut visited = HashSet::<(Pos, i32)>::new();
+        let mut queue = VecDeque::<(Pos, u32, i32)>::new();
+
+        queue.push_back((self.start, 0, 0));
+        while let Some((p, d, z)) = queue.pop_front() {
+            if visited.insert((p, z)) {
+                if p == self.goal && z == 0 {
+                    return d;
+                }
+                for (p_n, d_n, z_n) in self.adjacent_v2(p, z) {
+                    queue.push_back((p_n, d + d_n, z_n));
+                }
+            }
+        }
+        panic!("Didn't find solution");
+    }
 }
 
 fn solve(input: &str) -> u32 {
     let maze = Maze::build(input);
-    maze._print_maze();
     maze.bfs()
+}
+
+fn solve_v2(input: &str) -> u32 {
+    let maze = Maze::build(input);
+    maze.bfs_v2()
 }
 
 fn main() {
     let input = include_str!("input");
     println!("{}", solve(input));
-    // 472 is too high
-    // 462 is too high
-    // 446 is too low
-    // 445 is wrong
-    // 455 is wrong
+    println!("{}", solve_v2(input));
 }
 
 #[test]
-fn test_simple() {
+fn test_simple_p1() {
     assert_eq!(solve(include_str!("input-simple")), 23);
+}
+
+#[test]
+fn test_simple_p2() {
+    assert_eq!(solve_v2(include_str!("input-simple")), 26);
+}
+
+#[test]
+fn test_p2() {
+    assert_eq!(solve_v2(include_str!("input-test-p2")), 396);
 }
 
 #[test]
