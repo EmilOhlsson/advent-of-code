@@ -1,0 +1,5 @@
+[package]
+name = "springdroid-adventure"
+version = "0.1.0"
+authors = ["Emil Ohlsson <emil@kottland.net>"]
+edition = "2018"

@@ -1,0 +1,23 @@
+# Instructions
+#   AND X Y - Sets Y to true of both X and Y are true
+#   OR X Y  - Like AND, but OR
+#   NOT X Y - Sets Y to inverse of X
+#
+# Registers
+#   T [RW] - temporary
+#   J [RW] - Jump, if true at EOR, then jump
+#   A [RO] - true if ground one tiles away
+#   B [RO] - true if ground two tiles away
+#   C [RO] - true if ground three tiles away
+#   D [RO] - true if ground four tiles away
+
+# Check if there is a hole in 1-3
+OR A T
+AND B T
+AND C T
+NOT T J # Jump if there is a hole
+
+# Only jump if D is landable
+AND D J
+
+WALK
