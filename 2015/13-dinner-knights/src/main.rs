@@ -32,14 +32,12 @@ fn eval_seating(seating: &Vec<String>, rel: &Relations) -> i32 {
         .map(|(i, g)| {
             let left = rel
                 .get(g)
-                .unwrap()
-                .get(&seating[index(i as i32 - 1)])
-                .unwrap();
+                .map(|n| n.get(&seating[index(i as i32 - 1)]).unwrap_or(&0))
+                .unwrap_or(&0);
             let right = rel
                 .get(g)
-                .unwrap()
-                .get(&seating[index(i as i32 + 1)])
-                .unwrap();
+                .map(|n| n.get(&seating[index(i as i32 + 1)]).unwrap_or(&0))
+                .unwrap_or(&0);
             left + right
         })
         .sum()
@@ -74,9 +72,17 @@ fn solve(input: &str) -> i32 {
     seat(&rel, &Vec::new(), &HashSet::new(), &guests)
 }
 
+fn solve_v2(input: &str) -> i32 {
+    let rel = parse(input);
+    let mut guests = rel.keys().cloned().collect::<HashSet<String>>();
+    guests.insert("you".to_string());
+    seat(&rel, &Vec::new(), &HashSet::new(), &guests)
+}
+
 fn main() {
     let input = include_str!("input");
     println!("{}", solve(input));
+    println!("{}", solve_v2(input));
 }
 
 #[test]
