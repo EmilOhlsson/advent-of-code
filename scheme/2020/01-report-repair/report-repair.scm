@@ -1,9 +1,9 @@
 #!guile -s
 !#
 
-(add-to-load-path (dirname (current-filename)))
-(import (my-utils)    ;; file->lines function
-	(rnrs lists)) ;; find function
+(add-to-load-path "../..")
+(import (aoc-helpers input)    ;; file->lines function
+	(rnrs lists))          ;; find function
 
 ;; Read input, and convert to numbers
 (define input (map string->number (file->lines "input.txt")))
@@ -20,8 +20,7 @@
       (* head result)
       (find-pairs tail))))
 
-(display (find-pairs input))
-(newline)
+(format #t "~a\n" (find-pairs input))
 
 (define (find-triplets nums)
   (let
@@ -37,5 +36,4 @@
 	  ((null? (cdr b-tail)) (find-triplets a-tail))
 	  (else (recurse (car b-tail) (cdr b-tail))))))))
 
-(display (find-triplets input))
-(newline)
+(format #t "~a\n" (find-triplets input))

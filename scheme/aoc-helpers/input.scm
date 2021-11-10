@@ -1,4 +1,4 @@
-(define-module (my-utils)
+(define-module (aoc-helpers input)
 	       #:export (file->lines input->lines))
 
 (import (ice-9 rdelim))

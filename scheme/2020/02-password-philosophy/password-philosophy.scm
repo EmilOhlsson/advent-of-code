@@ -1,0 +1,32 @@
+(add-to-load-path "../..")
+(use-modules (ice-9 regex)
+	     (aoc-helpers input)
+	     (aoc-helpers lists)
+	     (srfi srfi-60))
+
+(define policy-regexp (make-regexp "^([0-9]+)-([0-9]+) ([a-z]): ([a-z]+)$"))
+(define (match str) (regexp-exec policy-regexp str))
+
+(define (valid-policy-p1? entry)
+  (define (within low high value) (and (<= low value) (>= high value)))
+  (let* ((m (match entry))
+	 (lo (string->number (match:substring m 1)))
+	 (hi (string->number (match:substring m 2)))
+	 (char (string-ref (match:substring m 3) 0))
+	 (password (string->list (match:substring m 4))))
+    (within lo hi (count (lambda (ch) (equal? ch char)) password))))
+
+(define input (file->lines "input.txt"))
+(format #t "~a\n" (count valid-policy-p1? input))
+
+(define (valid-policy-p2? entry)
+  (define (within low high value) (and (<= low value) (>= high value)))
+  (let* ((m (match entry))
+	 (lo (string->number (match:substring m 1)))
+	 (hi (string->number (match:substring m 2)))
+	 (char (string-ref (match:substring m 3) 0))
+	 (password (match:substring m 4)))
+    (equal? 1 (bitwise-xor (if (equal? (string-ref password (- lo 1)) char) 1 0))
+	    (if (equal? (string-ref password (- hi 1)) char) 1 0))))
+
+(format #t "~a\n" (count valid-policy-p2? input))
