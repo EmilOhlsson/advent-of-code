@@ -10,7 +10,9 @@
 
 (define (solve-part1 input)
   (apply +
-         (map bool->number (map (λ (ab) (apply < ab)) (windows 2 input)))))
+         (map bool->number
+              (map (λ (ab) (apply < ab))
+                   (windows 2 input)))))
 
 (define (solve-part2 input)
   (let [(filtered (map (λ (l) (apply + l))
