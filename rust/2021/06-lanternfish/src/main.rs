@@ -1,39 +1,36 @@
-fn solve(input: &str, days: u64) -> usize {
-    let mut fishes = input
+use cached::proc_macro::cached;
+
+#[cached]
+fn fish(days: u64, state: u32) -> u64 {
+    if days == 0 {
+        1
+    } else if state == 0 {
+        fish(days - 1, 6) + fish(days - 1, 8)
+    } else {
+        fish(days - 1, state - 1)
+    }
+}
+
+fn solve_v2(input: &str, days: u64) -> u64 {
+    input
         .trim()
         .split(',')
-        .map(str::parse::<u64>)
+        .map(str::parse::<u32>)
         .map(Result::unwrap)
-        .collect::<Vec<u64>>();
-
-    /* Naive approach */
-    for _ in 0..days {
-        let mut count = 0;
-        for fish in fishes.iter_mut() {
-            if *fish == 0 {
-                count += 1;
-                *fish = 6
-            } else {
-                *fish -= 1;
-            }
-        }
-        for _ in 0..count {
-            fishes.push(8);
-        }
-    }
-    fishes.len()
+        .map(|age| fish(days, age))
+        .sum()
 }
 
 fn main() {
     let input = include_str!("input");
-    println!("{}", solve(input, 80));
-    println!("{}", solve(input, 256));
+    println!("{}", solve_v2(input, 80));
+    println!("{}", solve_v2(input, 256));
 }
 
 #[test]
 fn test_simple() {
     let input = "3,4,3,1,2";
-    assert_eq!(solve(input, 18), 26);
-    assert_eq!(solve(input, 80), 5934);
-    assert_eq!(solve(input, 256), 26984457539);
+    assert_eq!(solve_v2(input, 18), 26);
+    assert_eq!(solve_v2(input, 80), 5934);
+    assert_eq!(solve_v2(input, 256), 26984457539);
 }
