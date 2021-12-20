@@ -1,9 +1,10 @@
+use rayon::prelude::*;
 use std::cmp::{max, min};
-use std::collections::{HashSet,HashMap};
+use std::collections::{HashMap, HashSet};
 
 type Xyz = Vec<i32>;
 type XSet = HashSet<i32>;
-type XyzSet = HashSet<[i32;3]>;
+type XyzSet = HashSet<[i32; 3]>;
 type XyzVec = Vec<Xyz>;
 
 struct Range {
@@ -87,14 +88,30 @@ fn compare_dimension(a: &XSet, b: &XSet) -> (usize, i32) {
     result
 }
 
+// The transform Ax + b = y can be written as A'x = y, using
+// [ A   | b ] [ x ]   [ y ]
+// [     | . ] [ . ] = [ . ]
+// [ 0.. | 1 ] [ 1 ]   [ 1 ]
+//
+// Inverse of a ortgonal matrix is it's transpose, and that
+// seem to be that case for swizzle matrices.
+//
+// So the inverse of the matrix above seems to be
+//
+// [ tr(A)  | -A^T * b ]
+// [        |  ...     ]
+// [ 0..    |     1    ]
+
 /// This is a transform from one orientation to another.
-/// (base dimension, modifier for revers/forward, 
-type Transform = [(usize, i32, i32);3];
+/// (base dimension, modifier for revers/forward,
+type Transform = [(usize, i32, i32); 3];
+type Transform2 = [[i32; 4]; 4];
 
 /// Compare two sets.
-fn compare_sets(set_a: &XyzVec, set_b: &XyzVec) -> Option<Transform> {
+fn compare_sets(set_a: &XyzVec, set_b: &XyzVec) -> Option<Transform2> {
     let mut matches = 0;
-    let mut transform: Transform = Default::default();
+    let mut transform: Transform2 = Default::default();
+    transform[3][3] = 1;
     for dim_a in [0, 1, 2] {
         let xs_a = get_dim(set_a, dim_a);
         for dim_b in [0, 1, 2] {
@@ -102,7 +119,8 @@ fn compare_sets(set_a: &XyzVec, set_b: &XyzVec) -> Option<Transform> {
             let (count, offset) = compare_dimension(&xs_a, &xs_b);
             if count >= 12 {
                 // dim_a and dim_b(fw) matches, with offset adj
-                transform[dim_b] = (dim_a, 1, offset);
+                transform[dim_a][dim_b] = 1;
+                transform[dim_a][3] = offset;
                 matches += 1;
                 break;
             }
@@ -112,7 +130,8 @@ fn compare_sets(set_a: &XyzVec, set_b: &XyzVec) -> Option<Transform> {
             let (count, offset) = compare_dimension(&xs_a, &xs_b);
             if count >= 12 {
                 // dim_a and dim_b(rev) matches with offset
-                transform[dim_b] = (dim_a, -1, offset);
+                transform[dim_a][dim_b] = -1;
+                transform[dim_a][3] = offset;
                 matches += 1;
                 break;
             }
@@ -135,7 +154,7 @@ fn compare_sets(set_a: &XyzVec, set_b: &XyzVec) -> Option<Transform> {
 /// and A us for example [[ A | b ]
 ///                       [ 0 | 1 ]]
 ///
-fn transform(point: &[i32], tr: &Transform) -> [i32;3] {
+fn transform(point: &[i32], tr: &Transform) -> [i32; 3] {
     [
         tr[0].2 + tr[0].1 * point[tr[0].0],
         tr[1].2 + tr[1].1 * point[tr[1].0],
@@ -146,9 +165,8 @@ fn transform(point: &[i32], tr: &Transform) -> [i32;3] {
 fn solve(input: &str) -> usize {
     let set = parse(input);
 
-
     // TODO: might need to keep track of inverse transforms
-    let mut transforms = HashMap::<usize, Vec<(usize, Transform)>>::new();
+    let mut transforms = HashMap::<usize, Vec<(usize, Transform2)>>::new();
 
     for (a, beacons1) in set.iter().enumerate() {
         for (b, beacons2) in set.iter().enumerate().skip(a + 1) {
@@ -160,7 +178,6 @@ fn solve(input: &str) -> usize {
                 // TODO: Need to keep track of transformations, and then map
                 // back into something relative to first set.
             }
-
         }
     }
 
@@ -178,13 +195,30 @@ fn solve(input: &str) -> usize {
     beacons.len()
 }
 
+fn solve_rayon(input: &str) -> usize {
+    let vec = parse(input);
+    let combinations: Vec<(usize, usize)> = (0..vec.len())
+        .map(|i1| ((i1 + 1)..vec.len()).map(move |i2| (i1, i2)))
+        .flatten()
+        .collect();
+
+    let transforms: Vec<(usize, usize, Transform2)> = combinations
+        .par_iter()
+        .filter_map(|(i1, i2)| compare_sets(&vec[*i1], &vec[*i2]).map(|tr| (*i1, *i2, tr)))
+        .collect();
+    println!("Transforms: {:?}", transforms);
+
+    todo!()
+}
+
 fn main() {
     let input = include_str!("input");
-    println!("{}", solve(input));
+    //println!("{}", solve(input));
+    println!("{}", solve_rayon(input));
 }
 
 #[test]
 fn test_simple() {
     let input = include_str!("input-simple");
-    assert_eq!(solve(input), 79);
+    assert_eq!(solve_rayon(input), 79);
 }
