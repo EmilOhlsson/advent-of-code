@@ -131,6 +131,10 @@ fn compare_sets(set_a: &XyzVec, set_b: &XyzVec) -> Option<Transform> {
     }
 }
 
+/// Better to use Affine transformation here likely: y = Ax, where x is the array [x y z 1]
+/// and A us for example [[ A | b ]
+///                       [ 0 | 1 ]]
+///
 fn transform(point: &[i32], tr: &Transform) -> [i32;3] {
     [
         tr[0].2 + tr[0].1 * point[tr[0].0],
