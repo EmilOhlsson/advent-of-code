@@ -65,8 +65,8 @@
        (increment-count table p))
     points))
 
-(define (solve-p1 lines)
-  (let ([pp-lines (filter straight? (map line->points lines))]
+(define (solve pred lines)
+  (let ([pp-lines (filter pred (map line->points lines))]
         [points (make-hash-table)])
 
     ;; Build a count table of all set points
@@ -81,22 +81,9 @@
          (> count 1))
       points)))
 
-(define (solve-p2 lines)
-  ;; Same as above, just don't filter on straight lines
-  (let ([pp-lines (map line->points lines)]
-        [points (make-hash-table)])
 
-    ;; Build a count table of all set points
-    (for-each 
-      (λ (pp-line) 
-         (add-points-to-table points (pp->pl pp-line)))
-      pp-lines)
-
-    ;(print-table points)
-    (hash-count 
-      (λ (point count)
-         (> count 1))
-      points)))
+(define (solve-p1 lines) (solve straight? lines))
+(define (solve-p2 lines) (solve (const #t) lines))
 
 (format #t "Part 1: ~a\n" (solve-p1 input))
 (format #t "Part 2: ~a\n" (solve-p2 input))
