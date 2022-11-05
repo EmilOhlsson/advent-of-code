@@ -12,15 +12,29 @@ function M.map(tbl, fn)
 end
 
 -- Construct a window iterator using arg.list and arg.size
+-- Call using util.window_iterator{size=<size>, list=<list}
 function M.window_iterator(arg)
     local i = arg.size
     local n = #arg.list + 1
     assert(i >= 1, "Zero sized window")
     assert(i <= n, "Window larger than table")
-    return function () 
+    return function ()
         i = i + 1
         if i <= n then
+            -- Create a new list from the slice using `unpack`
             return {unpack(arg.list, i - arg.size, i - 1)}
+        end
+    end
+end
+
+-- Create an iterator over items in `list`
+function M.list_iterator(list)
+    local i = 0;
+    local n = #list
+    return function ()
+        i = i + 1
+        if i <= n then
+            return list[i]
         end
     end
 end
@@ -30,10 +44,14 @@ function M.printf(fmt, ...)
     print(string.format(fmt, ...))
 end
 
--- TODO: Create fold method
---function M.fold(lst, op)
---    for k, v 
---end
+-- fold output of an `iterator` using `fn`, with a given `init`
+-- initial value
+function M.fold(fn, init, iterator)
+    for v in iterator do
+        init = fn(init, v)
+    end
+    return init
+end
 
 return M
 

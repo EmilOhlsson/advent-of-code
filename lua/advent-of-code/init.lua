@@ -3,7 +3,7 @@ local M = {}
 local util = require("advent-of-code.utils")
 
 -- This is just here to quickly try out stuff
-function test_fun(opts)
+local function test_fun(opts)
     print("Hello, world " .. vim.inspect(opts))
     print(string.format("Got argument: %s", opts.args))
     vim.notify("Hello, world, as a notification")
@@ -18,20 +18,35 @@ function test_fun(opts)
     print(string.format("got lines %s", vim.inspect(lines)))
     util.printf("This is a formatted string %s", "Indeed")
 
-    if opts.args == "foo" then
-        solve_2021_01_2(lines)
-    else
-        solve_2021_01_1(lines)
-    end
+    -- Create a floating window with some text
+    local scratch_buffer = vim.api.nvim_create_buf(false, true)
+    -- Get cursor position for current window
+    local pos = vim.api.nvim_win_get_cursor(0)
+    vim.api.nvim_buf_set_lines(scratch_buffer, 0, -1, true, {"Test", "text"})
+    vim.api.nvim_open_win(scratch_buffer, 0, {
+        relative = 'cursor',
+        row = pos[1] - 1, -- Because for some reason, row is 1-indexed
+        col = pos[2],
+        width = 10,
+        height = 2,
+        style = 'minimal',
+        border = 'shadow'
+    })
+
+    vim.pretty_print("Hi!")
 end
 
-function aoc(opts)
+local function aoc(opts)
     local year, day, part = string.match(opts.args, "(%d+) (%d+) (%d)")
     assert(year and day and part, "Missing <year> <day> <part>")
-    local solution = require(string.format('advent-of-code.%04d.%02d', year, day))
-    local lines = vim.api.nvim_buf_get_lines(0, opts.line1 - 1, opts.line2, false)
-    local answer = solution.solve(lines, tonumber(part))
-    util.printf("Answer: %s", answer)
+    local solver = require(string.format('advent-of-code.%04d.%02d', year, day))
+    if part == "0" then
+        solver.test()
+    else
+        local lines = vim.api.nvim_buf_get_lines(0, opts.line1 - 1, opts.line2, false)
+        local answer = solver.solve(lines, tonumber(part))
+        util.printf("Answer: %s", answer)
+    end
 end
 
 -- Load solutions, and bind them to commands
