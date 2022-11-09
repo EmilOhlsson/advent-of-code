@@ -1,9 +1,33 @@
 local M = {}
 
+local bit = require('bit')
 local util = require("advent-of-code.utils")
 local iterators = require('advent-of-code.iterators')
 
 function M.solve_p1(lines)
+    local counts = {}
+    local number_of_lines = 0
+    for line in iterators.values(lines) do
+        for i = 1, #line do
+            counts[i] = (counts[i] or 0) + tonumber(line:sub(i,i))
+        end
+        number_of_lines = number_of_lines + 1
+    end
+    local limit = math.floor(number_of_lines / 2)
+
+    local gamma = 0
+    local epsilon = 0
+    for _, count in ipairs(counts) do
+        --util.printf("bit: %s", vim.inspect(bit))
+        gamma = bit.lshift(gamma, 1)
+        epsilon = bit.lshift(epsilon, 1)
+        if count > limit then
+            gamma = gamma + 1
+        else
+            epsilon = epsilon + 1
+        end
+    end
+    return gamma * epsilon
 end
 
 function M.solve_p2(lines)
