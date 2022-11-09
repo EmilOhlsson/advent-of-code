@@ -1,12 +1,14 @@
 local M = {}
 
 local util = require("advent-of-code.utils")
+local iterators = require("advent-of-code.iterators")
+local functional = require("advent-of-code.functional")
 
 function M.solve_p1(depths)
     local count = 0
     local prev
 
-    for _, depth in ipairs(depths) do
+    for depth in depths do
         if prev and depth > prev then
             count = count + 1
         end
@@ -18,8 +20,9 @@ end
 function M.solve_p2(depths)
     local count = 0
     local prev
-    for win in util.window_iterator{list=depths, size=3} do
-        sum = win[1] + win[2] + win[3]
+    local depth_list = util.collect(depths)
+    for win in iterators.window{list=depth_list, size=3} do
+        local sum = win[1] + win[2] + win[3]
         if prev and sum > prev then
             count = count + 1
         end
@@ -34,7 +37,7 @@ function M.solve(lines, part)
         M.solve_p2,
     }
 
-    local depths =  util.map(lines, tonumber)
+    local depths =  functional.map(tonumber, iterators.values(lines))
     return parts[part](depths)
 end
 

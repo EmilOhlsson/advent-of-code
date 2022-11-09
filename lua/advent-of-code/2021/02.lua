@@ -1,13 +1,14 @@
 local M = {}
 
-local util = require("advent-of-code.utils")
+local util = require('advent-of-code.utils')
+local iterators = require('advent-of-code.iterators')
 
 -- instruction iterator, each call produces structs
 -- with `instruction` and `distance` fields
 local function create_instruction_iterator(lines)
     -- Co-routine just to try it out
     return coroutine.wrap(function()
-        for line in util.list_iterator(lines) do
+        for line in iterators.values(lines) do
             local instr, dist = string.match(line, "(%l+) (%d+)")
             coroutine.yield { instruction = instr, distance = tonumber(dist) }
         end
