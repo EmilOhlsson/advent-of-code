@@ -28,6 +28,14 @@ function M.collect(iterator)
     return result
 end
 
+function M.string_to_array(str)
+    local tbl = {}
+    str:gsub('.', function(char)
+        table.insert(tbl, char)
+    end)
+    return tbl
+end
+
 return M
 
 -- vim: set et ts=4 sw=4 ss=4 tw=100 :
