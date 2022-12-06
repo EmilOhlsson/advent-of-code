@@ -28,6 +28,19 @@ function M.window(arg)
     end
 end
 
+-- Return chunks of a table using arg.list and arg.size
+-- call using iterators.chunks{size=<size>, list=<list>}
+function M.chunks(arg)
+    local i = 0
+    local n = #arg.list
+    return function ()
+        i = i + arg.size
+        if i <= n then
+            return {unpack(arg.list, i - arg.size + 1, i)}
+        end
+    end
+end
+
 
 -- Zip two iterators into one returning tuples
 function M.zip(itr1, itr2)
