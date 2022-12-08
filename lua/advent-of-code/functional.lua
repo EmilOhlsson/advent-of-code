@@ -1,12 +1,26 @@
 local M = {}
 
+local iter = require('advent-of-code.iterators')
+
 -- Map a function, `fn` onto a `iterator`, and `yield` result
 function M.map(fn, iterator)
+    if type(iterator) == 'table' then -- Allow table input
+        iterator = iter.values(iterator)
+    end
     return coroutine.wrap(function()
         for value in iterator do
             coroutine.yield(fn(value))
         end
     end)
+end
+
+-- Map a function `fn` onto a table, and return resulting table
+function M.map_table(fn, tbl)
+    local result = {}
+    for i, v in ipairs(tbl) do
+        result[i] = fn(v)
+    end
+    return result
 end
 
 -- fold output of an `iterator` using `fn`, with a given `init`

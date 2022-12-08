@@ -1,13 +1,37 @@
+--local util = require('advent-of-code.utils')
+
 local M = {}
 
 -- Create an iterator over values in `list`
 function M.values(list)
     local i = 0;
     local n = #list
-    return function ()
+    return function()
         i = i + 1
         if i <= n then
             return list[i]
+        end
+    end
+end
+
+-- Iterate from start to stop, inclusive
+function M.range(start, stop)
+    if start <= stop then
+        return function()
+            if start <= stop then
+                local val = start
+                --util.printf(' returning %u', val)
+                start = start + 1
+                return val
+            end
+        end
+    else
+        return function()
+            if start >= stop then
+                local val = start
+                start = start - 1
+                return val
+            end
         end
     end
 end
@@ -19,11 +43,11 @@ function M.window(arg)
     local n = #arg.list + 1
     assert(i >= 1, "Zero sized window")
     assert(i <= n, "Window larger than table")
-    return function ()
+    return function()
         i = i + 1
         if i <= n then
             -- Create a new list from the slice using `unpack`
-            return {unpack(arg.list, i - arg.size, i - 1)}
+            return { unpack(arg.list, i - arg.size, i - 1) }
         end
     end
 end
@@ -33,20 +57,44 @@ end
 function M.chunks(arg)
     local i = 0
     local n = #arg.list
-    return function ()
+    return function()
         i = i + arg.size
         if i <= n then
-            return {unpack(arg.list, i - arg.size + 1, i)}
+            return { unpack(arg.list, i - arg.size + 1, i) }
         end
     end
 end
 
-
 -- Zip two iterators into one returning tuples
 function M.zip(itr1, itr2)
-    return coroutine.wrap(function()
-        coroutine.yield(itr1(), itr2())
-    end)
+    return function()
+        local a, b = itr1(), itr2()
+        if a ~= nil and b ~= nil then
+            return a, b
+        end
+    end
+end
+
+-- Zip multiple iterators together
+function M.zip_n(...)
+    local args = { ... }
+    return function()
+        local result = {}
+        for i, v in ipairs(args) do
+            result[i] = v()
+            if result[i] == nil then
+                return nil
+            end
+        end
+        return unpack(result)
+    end
+end
+
+-- Repeate value
+function M.repeated(value)
+    return function()
+        return value
+    end
 end
 
 return M

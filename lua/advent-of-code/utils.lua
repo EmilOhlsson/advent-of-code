@@ -18,7 +18,6 @@ function M.is_sorted(iterator)
     return true
 end
 
-
 -- Collect output from an `iterator` into a table
 function M.collect(iterator)
     local result = {}
@@ -28,6 +27,7 @@ function M.collect(iterator)
     return result
 end
 
+-- Create an array of character strings based on a string
 function M.string_to_array(str)
     local tbl = {}
     str:gsub('.', function(char)
