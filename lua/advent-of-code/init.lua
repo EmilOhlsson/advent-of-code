@@ -22,7 +22,7 @@ local function test_fun(opts)
     local scratch_buffer = vim.api.nvim_create_buf(false, true)
     -- Get cursor position for current window
     local pos = vim.api.nvim_win_get_cursor(0)
-    vim.api.nvim_buf_set_lines(scratch_buffer, 0, -1, true, {"Test", "text"})
+    vim.api.nvim_buf_set_lines(scratch_buffer, 0, -1, true, { "Test", "text" })
     vim.api.nvim_open_win(scratch_buffer, 0, {
         relative = 'cursor',
         row = pos[1] - 1, -- Because for some reason, row is 1-indexed
@@ -44,13 +44,15 @@ local function aoc(opts)
         solver.test()
     else
         local lines = vim.api.nvim_buf_get_lines(0, opts.line1 - 1, opts.line2, false)
-        local answer = solver.solve(lines, tonumber(part))
-        util.printf("Answer: %s", answer)
+        local answer = solver.solve(lines, tonumber(part), opts)
+        if answer ~= nil then
+            util.printf("Answer: %s", answer)
+        end
     end
 end
 
 -- Load solutions, and bind them to commands
-vim.api.nvim_create_user_command('AoC', aoc,{
+vim.api.nvim_create_user_command('AoC', aoc, {
     nargs = 1, -- Take one argument
     range = '%', -- Take a selection. Default is entire file
 })
