@@ -1,6 +1,13 @@
 local M = {}
 
 local iter = require('advent-of-code.iterators')
+local util = require('advent-of-code.utils')
+
+-- Handy binary operations
+M.ops = {
+    mul = function(x, y) return x * y end,
+    add = function(x, y) return x + y end,
+}
 
 -- Map a function, `fn` onto a `iterator`, and `yield` result
 function M.map(fn, iterator)
@@ -17,6 +24,9 @@ end
 -- Map a function `fn` onto a table, and return resulting table
 function M.map_table(fn, tbl)
     local result = {}
+    if type(tbl) == 'function' then
+        tbl = util.collect(tbl)
+    end
     for i, v in ipairs(tbl) do
         result[i] = fn(v)
     end
@@ -26,6 +36,9 @@ end
 -- fold output of an `iterator` using `fn`, with a given `init`
 -- initial value
 function M.fold(fn, init, iterator)
+    if type(iterator) == 'table' then
+        iterator = M.values(iterator)
+    end
     for v in iterator do
         init = fn(init, v)
     end
@@ -34,6 +47,9 @@ end
 
 -- Reduce `iterator` using `fn`
 function M.reduce(fn, iterator)
+    if type(iterator) == 'table' then
+        iterator = iter.values(iterator)
+    end
     local value = iterator()
     for v in iterator do
         value = fn(value, v)

@@ -36,6 +36,21 @@ function M.string_to_array(str)
     return tbl
 end
 
+-- Split a string
+function M.split_string(str, split)
+    assert(str ~= nil and split ~= nil)
+    local results = {}
+    for s in str:gmatch('([^' .. split .. ']+)') do
+        table.insert(results, s)
+    end
+    return results
+end
+
+-- Trim white spaces from before and aftter string
+function M.trim_string(str)
+    return str:match('^%s*(.-)%s*$')
+end
+
 return M
 
 -- vim: set et ts=4 sw=4 ss=4 tw=100 :

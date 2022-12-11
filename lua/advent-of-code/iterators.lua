@@ -97,6 +97,30 @@ function M.repeated(value)
     end
 end
 
+-- Return tables from an iterator by split
+function M.split(iter, split)
+    assert(iter ~= nil and split ~= nil)
+    -- Allow taking arrays as parameter
+    if type(iter) == 'table' then
+        iter = M.values(iter)
+    end
+    local done = false
+    return function()
+        local result = {}
+        for entry in iter do
+            if entry == split then
+                return result
+            else
+                table.insert(result, entry)
+            end
+        end
+        if not done then
+            done = true
+            return result
+        end
+    end
+end
+
 return M
 
 -- vim: set et ts=4 sw=4 ss=4 tw=100 :
