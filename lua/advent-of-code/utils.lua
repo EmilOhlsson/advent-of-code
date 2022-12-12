@@ -36,6 +36,18 @@ function M.string_to_array(str)
     return tbl
 end
 
+-- Character iterator
+function M.chars(str)
+    local i = 0
+    local n = #str
+    return function()
+        i = i + 1
+        if i <= n then
+            return str:sub(i, i)
+        end
+    end
+end
+
 -- Split a string
 function M.split_string(str, split)
     assert(str ~= nil and split ~= nil)
