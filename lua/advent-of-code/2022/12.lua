@@ -20,6 +20,7 @@ local function parse(lines)
     setmetatable(map, mt)
     local start, stop
 
+    -- Create, and clear namespace, and then assign colors to highlight groups
     local ns = vim.api.nvim_create_namespace('aoc')
     vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
     for h = 97, 106 do
@@ -43,7 +44,7 @@ local function parse(lines)
             assert(height ~= nil)
             map[ps.create { row, col }] = height
 
-            -- Funny highlighting
+            -- Funny highlighting. Assign highlight to characters
             vim.api.nvim_buf_add_highlight(0, ns, 'AoC' .. height, row - 1, col - 1, col)
             --vim.api.nvim_
         end

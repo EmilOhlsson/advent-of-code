@@ -7,6 +7,17 @@ local util = require('advent-of-code.utils')
 M.ops = {
     mul = function(x, y) return x * y end,
     add = function(x, y) return x + y end,
+    neq = function(x, y) return x ~= y end,
+    eq = function(x, y) return x == y end,
+}
+
+M.gen = {
+    -- Create a unary function that performs binary op with `v`
+    bin = function(op, v)
+        return function(x)
+            return op(v, x)
+        end
+    end,
 }
 
 -- Map a function, `fn` onto a `iterator`, and `yield` result
@@ -31,6 +42,31 @@ function M.map_table(fn, tbl)
         result[i] = fn(v)
     end
     return result
+end
+
+-- Recursively map `fn` onto table in place
+function M.ri_map(fn, tbl)
+    for _, v in ipairs(tbl) do
+        if type(v) == 'table' then
+            M.ri_map(fn, v)
+        else
+            fn(v)
+        end
+    end
+end
+
+-- Iterate only over items that are truthy by `pred`
+function M.filter(pred, iterator)
+    if type(iter) == 'table' then
+        iterator = iter.values(iterator)
+    end
+    return coroutine.wrap(function()
+        for value in iterator do
+            if pred(value) then
+                coroutine.yield(value)
+            end
+        end
+    end)
 end
 
 -- fold output of an `iterator` using `fn`, with a given `init`
