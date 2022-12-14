@@ -44,7 +44,13 @@ local function aoc(opts)
         solver.test()
     else
         local lines = vim.api.nvim_buf_get_lines(0, opts.line1 - 1, opts.line2, false)
-        local answer = solver.solve(lines, tonumber(part), opts)
+        local solution = solver[tonumber(part)]
+        local answer
+        if solution ~= nil then
+            answer = solution(lines, opts)
+        else
+            answer = solver.solve(lines, tonumber(part), opts)
+        end
         if answer ~= nil then
             util.printf("Answer: %s", answer)
         end
