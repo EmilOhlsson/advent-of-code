@@ -29,10 +29,19 @@ end
 function M.mt.__tostring(point)
     local result = '(' .. point[1]
     for i = 2, #point do
-        result = result .. ', ' .. point[i]
+        result = result .. ',' .. point[i]
     end
     result = result .. ')'
     return result
+end
+
+function M.mdistance(self, other)
+    local dist = 0
+    assert(#self == #other)
+    for i = 1, #self do
+        dist = dist + math.abs(self[i] - other[i])
+    end
+    return dist
 end
 
 -- Create point from table
@@ -40,6 +49,7 @@ function M.create(point)
     assert(type(point) == 'table')
     assert(#point >= 1)
     setmetatable(point, M.mt)
+    point.mdistance = M.mdistance
     return point
 end
 
