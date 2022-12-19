@@ -48,14 +48,10 @@ function M.chars(str)
     end
 end
 
--- Split a string
+-- Split a string, on a set of characters
 function M.split_string(str, split)
     assert(str ~= nil and split ~= nil)
-    local results = {}
-    for s in str:gmatch('([^' .. split .. ']+)') do
-        table.insert(results, s)
-    end
-    return results
+    return M.collect(str:gmatch('([^' .. split .. ']+)'))
 end
 
 -- Trim white spaces from before and aftter string

@@ -1,5 +1,7 @@
 local M = {
-    mt = {} -- Shared metatable for points
+    mt = {
+        type = 'point'
+    } -- Shared metatable for points
 }
 
 -- Allow point addition
@@ -51,6 +53,14 @@ function M.create(point)
     setmetatable(point, M.mt)
     point.mdistance = M.mdistance
     return point
+end
+
+function M.is_point(point)
+    local mt = getmetatable(point)
+    if mt ~= nil then
+        return mt.type == 'point'
+    end
+    return false
 end
 
 return M

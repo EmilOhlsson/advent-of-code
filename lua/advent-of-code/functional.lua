@@ -20,6 +20,22 @@ M.gen = {
     end,
 }
 
+function M.sum(iterator)
+    if type(iterator) == 'table' then
+        local sum = 0
+        for _, v in ipairs(iterator) do
+            sum = sum + v
+        end
+        return sum
+    else
+        local sum = 0
+        for v in iterator do
+            sum = sum + v
+        end
+        return sum
+    end
+end
+
 -- Map a function, `fn` onto a `iterator`, and `yield` result
 function M.map(fn, iterator)
     if type(iterator) == 'table' then -- Allow table input
