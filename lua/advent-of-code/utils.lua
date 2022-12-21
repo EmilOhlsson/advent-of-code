@@ -59,6 +59,19 @@ function M.trim_string(str)
     return str:match('^%s*(.-)%s*$')
 end
 
+function M.copy(tbl)
+    if type(tbl) == 'table' then
+        local tbl_new = {}
+        for k,v in pairs(tbl) do
+            tbl_new[k] = M.copy(v)
+        end
+        setmetatable(tbl_new, getmetatable(tbl))
+        return tbl_new
+    else
+        return tbl
+    end
+end
+
 return M
 
 -- vim: set et ts=4 sw=4 ss=4 tw=100 :
