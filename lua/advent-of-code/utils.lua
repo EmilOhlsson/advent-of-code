@@ -27,6 +27,19 @@ function M.collect(iterator)
     return result
 end
 
+-- Joind a list of elements using concat
+function M.join(tbl, sep)
+    if #tbl > 0 then
+        local res = tostring(tbl[1])
+        for i = 2, #tbl do
+            res = res .. sep .. tbl[i]
+        end
+        return res
+    else
+        return ""
+    end
+end
+
 -- Create an array of character strings based on a string
 function M.string_to_array(str)
     local tbl = {}
@@ -62,7 +75,7 @@ end
 function M.copy(tbl)
     if type(tbl) == 'table' then
         local tbl_new = {}
-        for k,v in pairs(tbl) do
+        for k, v in pairs(tbl) do
             tbl_new[k] = M.copy(v)
         end
         setmetatable(tbl_new, getmetatable(tbl))

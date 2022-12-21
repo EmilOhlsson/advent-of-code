@@ -73,7 +73,7 @@ end
 
 -- Iterate only over items that are truthy by `pred`
 function M.filter(pred, iterator)
-    if type(iter) == 'table' then
+    if type(iterator) == 'table' then
         iterator = iter.values(iterator)
     end
     return coroutine.wrap(function()
@@ -83,6 +83,25 @@ function M.filter(pred, iterator)
             end
         end
     end)
+end
+
+-- Find a specific item in a sequence
+function M.find_pos(pred, iterator)
+    if type(iterator) == 'table' then
+        iterator = iter.values(iterator)
+    end
+    if type(pred) == 'number' then
+        pred = function(x) return pred == x end
+    end
+    local i = 1
+    for v in iterator do
+        if pred(v) then
+            return i
+        else
+            i = i + 1
+        end
+    end
+    return nil
 end
 
 -- fold output of an `iterator` using `fn`, with a given `init`

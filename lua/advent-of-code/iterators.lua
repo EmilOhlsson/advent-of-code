@@ -1,4 +1,4 @@
---local util = require('advent-of-code.utils')
+local util = require('advent-of-code.utils')
 
 local M = {}
 
@@ -39,6 +39,9 @@ end
 -- Construct a window iterator using arg.list and arg.size
 -- Call using iterators.window{size=<size>, list=<list}
 function M.window(arg)
+    if type(arg.list) == 'function' then
+        arg.list = util.collect(arg.list)
+    end
     local i = arg.size
     local n = #arg.list + 1
     assert(i >= 1, "Zero sized window")
