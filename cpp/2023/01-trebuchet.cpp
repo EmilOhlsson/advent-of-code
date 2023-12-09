@@ -2,8 +2,8 @@
 #include <fmt/core.h>
 #include <ranges>
 
-#include "input.hpp"
 #include "utils.hpp"
+#include "input-01.hpp"
 
 /* As to allow constexpr */
 static constexpr bool is_digit(char ch) {
