@@ -2,8 +2,8 @@
 #include <fmt/core.h>
 #include <ranges>
 
-#include "utils.hpp"
 #include "input-01.hpp"
+#include "utils.hpp"
 
 /* As to allow constexpr */
 static constexpr bool is_digit(char ch) {
@@ -76,7 +76,6 @@ static constexpr std::tuple<uint64_t, uint64_t> solve(std::string_view text) {
 
 int main() {
     static constexpr std::tuple<uint64_t, uint64_t> answers{solve(input)};
-    std::puts(string_rep<0>::value);
-    std::puts(string_rep<std::get<0>(answers)>::value);
-    std::puts(string_rep<std::get<1>(answers)>::value);
+    std::puts(utils::string_rep<std::get<0>(answers)>::value);
+    std::puts(utils::string_rep<std::get<1>(answers)>::value);
 }
