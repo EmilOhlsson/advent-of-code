@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from collections import Counter
 
+
 def main():
     parser = ArgumentParser(prog='historian')
     parser.add_argument('-f', '--file', nargs='?', help='Input file', type=Path, required=True)
@@ -31,8 +32,6 @@ def main():
         if value in counts:
             uniqueness += value * counts[value]
     print(f'Total uniqueness: {uniqueness}')
-
-
             
 
 if __name__ == '__main__':
