@@ -3,3 +3,5 @@ Cargo.lock
 **/*.rs.bk
 .cache
 compile_commands.json
+.venv
+.python-version
