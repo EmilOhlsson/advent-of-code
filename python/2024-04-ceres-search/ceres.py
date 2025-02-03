@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Solution for Advent of code 2024-04"""
+
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
@@ -26,6 +28,18 @@ def xmas_at(pos: Pos, ch: Map) -> int:
     return sum(c in xmas for c in candidates)
 
 
+@typechecked
+def cross_mas_at(pos: Pos, ch: Map) -> int:
+    """Check if there is a cross-mas at `pos`"""
+    r, c = pos
+
+    candidates = [
+            f'{ch[(r-1, c-1)]}{ch[pos]}{ch[(r+1, c+1)]}',
+            f'{ch[(r+1, c-1)]}{ch[pos]}{ch[(r-1, c+1)]}', ]
+    xmas = {'MAS', 'SAM'}
+    return 1 if all(cnd in xmas for cnd in candidates) else 0
+
+
 def main():
     """Main function"""
     parser = ArgumentParser(prog='ceres')
@@ -39,12 +53,15 @@ def main():
             chars.update({(row, col): ch for col, ch in
                           enumerate(line.strip())})
 
-    count: int = 0
+    count_v1: int = 0
+    count_v2: int = 0
     key_set = set(chars.keys())
     for pos in key_set:
-        count += xmas_at(pos, chars)
+        count_v1 += xmas_at(pos, chars)
+        count_v2 += cross_mas_at(pos, chars)
 
-    print(f'Counted {count} XMAS')
+    print(f'Counted {count_v1} XMAS')
+    print(f'Counted {count_v2} CROSSMAS')
 
 
 if __name__ == '__main__':
