@@ -4,6 +4,7 @@
 
 from argparse import ArgumentParser
 from collections import defaultdict
+from os import getenv
 from pathlib import Path
 
 from typeguard import typechecked
@@ -42,9 +43,10 @@ def cross_mas_at(pos: Pos, ch: Map) -> int:
 
 def main():
     """Main function"""
+    input_dir = getenv('AOC_INPUT') or '../../inputs'
     parser = ArgumentParser(prog='ceres')
     parser.add_argument('-f', '--file', nargs='?', help='Input file',
-                        type=Path, default='../../inputs/2024/04.txt')
+                        type=Path, default=input_dir + '/2024/04.txt')
     args = parser.parse_args()
 
     chars: Map = defaultdict(lambda: '.')
