@@ -1,4 +1,5 @@
 debugpy
 python-lsp-server[all]
 ruff
+pyright
 typeguard

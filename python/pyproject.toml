@@ -3,8 +3,53 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = 'Advent of Code'
+name = 'advent_of_code'
 version = '0.1.0'
 description = 'My solutions for advent of code'
 readme = 'README.md'
-requires-python = '3.13'
+requires-python = '>=3.11'
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "D",   # pydocstyle
+]
+# Same as Black
+line-length = 88
+
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Assume Python 3.11
+target-version = "py311"
+
+[tool.ruff.mccabe]
+max-complexity = 10
+
+[tool.ruff.isort]
+known-first-party = ["advent_of_code"]  # Update with your package name
+combine-as-imports = true
+
+[tool.pyright]
+include = ["src"]
+exclude = [
+    "**/__pycache__",
+    "**/.venv"
+]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Solution for Advent of code 2024-04"""
+"""Solution for Advent of code 2024-04."""
 
 from argparse import ArgumentParser
 from collections import defaultdict
@@ -9,14 +9,13 @@ from pathlib import Path
 
 from typeguard import typechecked
 
-
 Pos = tuple[int, int]
 Map = defaultdict[Pos, str]
 
 
 @typechecked
 def xmas_at(pos: Pos, ch: Map) -> int:
-    """Count number of possible XMAS at `pos`"""
+    """Count number of possible XMAS at `pos`."""
     r, c = pos
 
     candidates = [
@@ -31,7 +30,7 @@ def xmas_at(pos: Pos, ch: Map) -> int:
 
 @typechecked
 def cross_mas_at(pos: Pos, ch: Map) -> int:
-    """Check if there is a cross-mas at `pos`"""
+    """Check if there is a cross-mas at `pos`."""
     r, c = pos
 
     candidates = [
@@ -42,7 +41,7 @@ def cross_mas_at(pos: Pos, ch: Map) -> int:
 
 
 def main():
-    """Main function"""
+    """Program entry point."""
     input_dir = getenv('AOC_INPUT') or '../../inputs'
     parser = ArgumentParser(prog='ceres')
     parser.add_argument('-f', '--file', nargs='?', help='Input file',
@@ -50,7 +49,7 @@ def main():
     args = parser.parse_args()
 
     chars: Map = defaultdict(lambda: '.')
-    with open(args.file, 'r', encoding='utf-8') as file:
+    with open(args.file, encoding='utf-8') as file:
         for row, line in enumerate(file):
             chars.update({(row, col): ch for col, ch in
                           enumerate(line.strip())})
