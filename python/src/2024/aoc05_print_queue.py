@@ -42,7 +42,7 @@ def main():
                 else:
                     pages.sort(
                         key=cmp_to_key(lambda lhs, rhs:
-                                       - 1 if rhs in following[lhs] else 1))
+                                       -1 if rhs in following[lhs] else 1))
                     middle_page_sum_v2 += int(pages[len(pages) // 2])
 
     print(f'Sum part 1: {middle_page_sum_v1}')
