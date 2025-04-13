@@ -14,6 +14,16 @@ function M.mt.__add(a, b)
     return M.create(result)
 end
 
+-- Allow point addition
+function M.mt.__sub(a, b)
+    local result = {}
+    assert(#a == #b)
+    for i = 1, #a do
+        result[i] = a[i] - b[i]
+    end
+    return M.create(result)
+end
+
 -- Allow point comparison
 function M.mt.__eq(a, b)
     if #a ~= #b then
