@@ -1,3 +1,6 @@
+---@class Point
+---@field mdistance fun(self, other): number
+
 local M = {
     mt = {
         type = 'point'
@@ -39,14 +42,15 @@ end
 
 -- Allow point printing
 function M.mt.__tostring(point)
-    local result = '(' .. point[1]
+    local result = '(' .. tostring(point[1])
     for i = 2, #point do
-        result = result .. ',' .. point[i]
+        result = result .. ',' .. tostring(point[i])
     end
     result = result .. ')'
     return result
 end
 
+---@return number
 function M.mdistance(self, other)
     local dist = 0
     assert(#self == #other)
@@ -56,7 +60,8 @@ function M.mdistance(self, other)
     return dist
 end
 
--- Create point from table
+--- Create point from table
+---@return Point
 function M.create(point)
     assert(type(point) == 'table')
     assert(#point >= 1)

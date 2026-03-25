@@ -85,6 +85,24 @@ function M.copy(tbl)
     end
 end
 
+local map_mt = {
+    __index = function(table, key)
+        return rawget(table, tostring(key))
+    end,
+    __newindex = function(table, key, value)
+        rawset(table, tostring(key), value)
+    end,
+}
+
+---@class Map
+
+---@return Map
+function M.create_map()
+    local result = {}
+    setmetatable(result, map_mt)
+    return result
+end
+
 return M
 
 -- vim: set et ts=4 sw=4 ss=4 tw=100 :
